@@ -1,0 +1,53 @@
+[tools]
+go = "1.25"
+node = "24"
+pinact = "latest"
+pnpm = "10"
+
+[tasks.init]
+description = "初始化模板中的项目名称、模块路径和仓库信息"
+run = "GO111MODULE=off go run ./tools/init-template/main.go"
+
+[tasks.tidy]
+description = "整理 Go 模块依赖"
+run = "go mod tidy"
+
+[tasks.test]
+description = "运行 Go 测试"
+run = "go test -v ./..."
+
+[tasks.vet]
+description = "运行 Go 静态检查"
+run = "go vet ./..."
+
+[tasks.build]
+description = "构建 CLI 二进制"
+run = "go build -trimpath -ldflags='-s -w -X main.version=dev' -o bin/your-cli ."
+
+[tasks.run]
+description = "运行 CLI"
+run = "go run ."
+
+[tasks.'action:pin']
+description = "运行 Pinact 更新 GitHub Action 版本"
+run = "pinact run -u"
+
+[tasks.'docs:install']
+description = "安装文档站依赖"
+dir = "docs"
+run = "pnpm install"
+
+[tasks.'docs:dev']
+description = "启动 VitePress 文档站"
+dir = "docs"
+run = "pnpm dev"
+
+[tasks.'docs:build']
+description = "构建 VitePress 文档站"
+dir = "docs"
+run = "pnpm build"
+
+[tasks.'docs:preview']
+description = "预览 VitePress 文档站"
+dir = "docs"
+run = "pnpm preview"
