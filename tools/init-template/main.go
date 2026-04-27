@@ -6,9 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+const templateOriginPath = "github.com/YewFence/go-cli-template"
 
 type config struct {
 	module      string
@@ -59,6 +62,10 @@ func run() error {
 		}
 		return replaceInFile(path, replacements)
 	}); err != nil {
+		return err
+	}
+
+	if err := removeTemplateOrigin(); err != nil {
 		return err
 	}
 
@@ -250,4 +257,27 @@ func replaceInFile(path string, replacements []replacement) error {
 		return err
 	}
 	return os.WriteFile(path, []byte(updated), info.Mode())
+}
+
+func removeTemplateOrigin() error {
+	remoteURLOutput, err := exec.Command("git", "remote", "get-url", "origin").Output()
+	if err != nil {
+		return nil
+	}
+
+	if !isTemplateOrigin(string(remoteURLOutput)) {
+		return nil
+	}
+
+	return exec.Command("git", "remote", "remove", "origin").Run()
+}
+
+func isTemplateOrigin(remoteURL string) bool {
+	remoteURL = strings.TrimSpace(remoteURL)
+	remoteURL = strings.TrimSuffix(remoteURL, ".git")
+	remoteURL = strings.TrimPrefix(remoteURL, "https://")
+	remoteURL = strings.TrimPrefix(remoteURL, "http://")
+	remoteURL = strings.TrimPrefix(remoteURL, "git@")
+	remoteURL = strings.Replace(remoteURL, ":", "/", 1)
+	return remoteURL == templateOriginPath
 }
