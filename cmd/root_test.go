@@ -6,15 +6,31 @@ import (
 	"testing"
 )
 
+func configureRootCommand(buffer *bytes.Buffer, args ...string) {
+	rootCmd.SetOut(buffer)
+	rootCmd.SetErr(buffer)
+	rootCmd.SetArgs(args)
+	for _, command := range rootCmd.Commands() {
+		command.SetOut(buffer)
+		command.SetErr(buffer)
+	}
+}
+
+func resetRootCommand() {
+	rootCmd.SetOut(nil)
+	rootCmd.SetErr(nil)
+	rootCmd.SetArgs(nil)
+	for _, command := range rootCmd.Commands() {
+		command.SetOut(nil)
+		command.SetErr(nil)
+	}
+}
+
 func TestRootCommand(t *testing.T) {
 	buffer := new(bytes.Buffer)
-	rootCmd.SetOut(buffer)
-	rootCmd.SetArgs([]string{})
+	configureRootCommand(buffer)
 
-	t.Cleanup(func() {
-		rootCmd.SetOut(nil)
-		rootCmd.SetArgs(nil)
-	})
+	t.Cleanup(resetRootCommand)
 
 	if err := rootCmd.Execute(); err != nil {
 		t.Fatalf("execute root command: %v", err)
@@ -27,19 +43,12 @@ func TestRootCommand(t *testing.T) {
 
 func TestCompletionCommand(t *testing.T) {
 	buffer := new(bytes.Buffer)
-	rootCmd.SetOut(buffer)
-	rootCmd.SetArgs([]string{"completion", "bash"})
 
-	t.Cleanup(func() {
-		rootCmd.SetOut(nil)
-		rootCmd.SetArgs(nil)
-	})
-
-	if err := rootCmd.Execute(); err != nil {
-		t.Fatalf("execute completion command: %v", err)
+	if err := rootCmd.GenBashCompletionV2(buffer, true); err != nil {
+		t.Fatalf("generate bash completion: %v", err)
 	}
 
-	if got := buffer.String(); !strings.Contains(got, "bash completion for your-cli") {
+	if got := buffer.String(); !strings.Contains(got, "# bash completion V2 for your-cli") {
 		t.Fatalf("unexpected completion output: %q", got)
 	}
 }
