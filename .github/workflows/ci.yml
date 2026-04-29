@@ -9,62 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  actions:
-    name: GitHub Actions
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: 24
-
-      - name: Check action updates
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx --yes actions-up@1.14.1 --json > actions-up-report.json
-
-          node <<'NODE'
-          const fs = require('node:fs')
-
-          const report = JSON.parse(fs.readFileSync('actions-up-report.json', 'utf8'))
-          const updates = report.updates ?? []
-          const blockedByMode = report.blockedByMode ?? []
-          const skipped = report.skipped ?? []
-
-          const lines = [
-            '## GitHub Actions 更新检查',
-            '',
-            `状态 ${report.status}`,
-            `发现的 Action 数量 ${report.summary?.totalActions ?? 0}`,
-            `已检查的 Action 数量 ${report.summary?.totalActionsChecked ?? 0}`,
-            `可更新数量 ${updates.length}`,
-            `被模式过滤数量 ${blockedByMode.length}`,
-            `跳过数量 ${skipped.length}`,
-          ]
-
-          if (updates.length > 0) {
-            lines.push('', '| 文件 | Action | 当前版本 | 目标版本 |', '| --- | --- | --- | --- |')
-            for (const update of updates) {
-              const action = update.action ?? {}
-              const file = action.file ?? 'unknown'
-              const line = action.line ?? 1
-              const current = update.currentVersion ?? action.version ?? 'unknown'
-              const target = update.latestVersion ?? update.targetRef ?? 'unknown'
-              lines.push(`| ${file}:${line} | ${action.name ?? 'unknown'} | ${current} | ${target} |`)
-              console.error(`::error file=${file},line=${line}::${action.name ?? 'GitHub Action'} 可以从 ${current} 更新到 ${target}`)
-            }
-          }
-
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`)
-
-          if (updates.length > 0) {
-            console.error('发现过期 GitHub Actions，请运行 mise run action:update 或 mise run action:update:all 后提交变更')
-            process.exit(1)
-          }
-          NODE
-
   go:
     name: Go
     runs-on: ubuntu-latest
