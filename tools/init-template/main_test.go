@@ -1,6 +1,12 @@
 package main
 
-import "testing"
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
 
 func TestIsTemplateOrigin(t *testing.T) {
 	tests := []struct {
@@ -48,4 +54,77 @@ func TestIsTemplateOrigin(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestResetGitHistoryCreatesFreshRepository(t *testing.T) {
+	requireGit(t)
+
+	directory := t.TempDir()
+	t.Chdir(directory)
+	os.WriteFile("main.go", []byte("package main\n"), 0o644)
+
+	runTestGit(t, "init", "-b", "main")
+	runTestGit(t, "remote", "add", "origin", "https://github.com/YewFence/go-cli-template.git")
+	runTestGit(t, "add", ".")
+	runTestGit(t, "-c", "user.name=Template", "-c", "user.email=template@example.com", "-c", "commit.gpgsign=false", "commit", "-m", "initial")
+
+	if err := resetGitHistory(); err != nil {
+		t.Fatalf("resetGitHistory() error = %v", err)
+	}
+
+	if info, err := os.Stat(".git"); err != nil || !info.IsDir() {
+		t.Fatalf(".git directory was not recreated")
+	}
+	if remoteURL, err := runTestGitAllowError("remote", "get-url", "origin"); err == nil {
+		t.Fatalf("origin remote = %q, want missing remote", remoteURL)
+	}
+	if output := runTestGit(t, "branch", "--show-current"); strings.TrimSpace(output) != "main" {
+		t.Fatalf("branch = %q, want main", output)
+	}
+	if output, err := runTestGitAllowError("log", "--oneline"); err == nil {
+		t.Fatalf("git log succeeded after history reset with output %q", output)
+	}
+}
+
+func TestResetGitHistoryRejectsNestedRepository(t *testing.T) {
+	requireGit(t)
+
+	directory := t.TempDir()
+	t.Chdir(directory)
+	runTestGit(t, "init", "-b", "main")
+
+	nestedDirectory := filepath.Join(directory, "nested")
+	if err := os.Mkdir(nestedDirectory, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(nestedDirectory)
+
+	err := resetGitHistory()
+	if err == nil {
+		t.Fatalf("resetGitHistory() error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "repository root") {
+		t.Fatalf("resetGitHistory() error = %v, want repository root error", err)
+	}
+}
+
+func requireGit(t *testing.T) {
+	t.Helper()
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+}
+
+func runTestGit(t *testing.T, args ...string) string {
+	t.Helper()
+	output, err := runTestGitAllowError(args...)
+	if err != nil {
+		t.Fatalf("git %s failed: %v\n%s", strings.Join(args, " "), err, output)
+	}
+	return output
+}
+
+func runTestGitAllowError(args ...string) (string, error) {
+	output, err := exec.Command("git", args...).CombinedOutput()
+	return string(output), err
 }

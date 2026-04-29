@@ -19,6 +19,7 @@ type config struct {
 	owner       string
 	repo        string
 	description string
+	freshGit    bool
 }
 
 func main() {
@@ -73,12 +74,19 @@ func run() error {
 		if err := os.Remove("README.md"); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return err
 		}
-		return os.Rename("README.template.md", "README.md")
+		if err := os.Rename("README.template.md", "README.md"); err != nil {
+			return err
+		}
 	} else if errors.Is(err, os.ErrNotExist) {
-		return nil
 	} else {
 		return err
 	}
+
+	if config.freshGit {
+		return resetGitHistory()
+	}
+
+	return nil
 }
 
 func parseFlags() config {
@@ -88,8 +96,86 @@ func parseFlags() config {
 	flag.StringVar(&config.owner, "owner", "", "GitHub owner or organization")
 	flag.StringVar(&config.repo, "repo", "", "GitHub repository name")
 	flag.StringVar(&config.description, "description", "", "Project description")
+	flag.BoolVar(&config.freshGit, "fresh-git", false, "Reset Git history and create a fresh main branch")
 	flag.Parse()
 	return config
+}
+
+func resetGitHistory() error {
+	if _, err := exec.LookPath("git"); err != nil {
+		return fmt.Errorf("find git: %w", err)
+	}
+	if err := ensureFreshGitRoot(); err != nil {
+		return err
+	}
+	if err := os.RemoveAll(".git"); err != nil {
+		return fmt.Errorf("remove .git: %w", err)
+	}
+	if err := runGit("init", "-b", "main"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureFreshGitRoot() error {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	currentDir, err = filepath.EvalSymlinks(currentDir)
+	if err != nil {
+		return err
+	}
+
+	gitInfo, err := os.Stat(".git")
+	if err == nil && !gitInfo.IsDir() {
+		return errors.New("--fresh-git does not support Git worktrees or repositories with a .git file")
+	}
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	topLevel, err := gitOutput("rev-parse", "--show-toplevel")
+	if err != nil {
+		if errors.Is(err, errGitCommandFailed) {
+			return nil
+		}
+		return err
+	}
+
+	topLevel = strings.TrimSpace(topLevel)
+	if topLevel == "" {
+		return nil
+	}
+	topLevel, err = filepath.EvalSymlinks(topLevel)
+	if err != nil {
+		return err
+	}
+	if topLevel != currentDir {
+		return fmt.Errorf("--fresh-git must be run from the Git repository root, current root is %s", topLevel)
+	}
+	return nil
+}
+
+var errGitCommandFailed = errors.New("git command failed")
+
+func gitOutput(args ...string) (string, error) {
+	output, err := exec.Command("git", args...).CombinedOutput()
+	if err != nil {
+		if errors.Is(err, exec.ErrNotFound) {
+			return "", fmt.Errorf("find git: %w", err)
+		}
+		if len(output) == 0 {
+			return "", fmt.Errorf("%w: git %s: %v", errGitCommandFailed, strings.Join(args, " "), err)
+		}
+		return "", fmt.Errorf("%w: git %s: %v: %s", errGitCommandFailed, strings.Join(args, " "), err, strings.TrimSpace(string(output)))
+	}
+	return string(output), nil
+}
+
+func runGit(args ...string) error {
+	_, err := gitOutput(args...)
+	return err
 }
 
 func (config config) validate() error {
