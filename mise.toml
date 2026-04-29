@@ -1,8 +1,8 @@
 [tools]
 go = "1.25"
 node = "24"
+"npm:actions-up" = "1"
 "npm:@semanticversion/cli" = "latest"
-pinact = "latest"
 pnpm = "10"
 
 [tasks.init]
@@ -32,6 +32,18 @@ run = "go run ."
 [tasks.'action:pin']
 description = "运行 Pinact 更新 GitHub Action 版本"
 run = "pinact run -u"
+
+[tasks.'action:check']
+description = "检查 GitHub Action 是否有可更新版本"
+run = "actions-up --json"
+
+[tasks.'action:update']
+description = "交互式更新 GitHub Action 版本并默认固定为提交哈希"
+run = "actions-up"
+
+[tasks.'action:update:all']
+description = "自动更新全部 GitHub Action 版本并默认固定为提交哈希"
+run = "actions-up --yes"
 
 [tasks.'docs:install']
 description = "安装文档站依赖"
