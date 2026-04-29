@@ -83,9 +83,12 @@ func run() error {
 	}
 
 	if config.freshGit {
-		return resetGitHistory()
+		if err := resetGitHistory(); err != nil {
+			return err
+		}
 	}
 
+	fmt.Fprintln(os.Stdout, "第三方库版本可能已经过时，建议运行 mise run update 更新 Go 依赖并整理模块。")
 	return nil
 }
 
