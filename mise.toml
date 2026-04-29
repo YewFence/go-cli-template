@@ -4,6 +4,7 @@ node = "24"
 "npm:actions-up" = "1"
 "npm:@semanticversion/cli" = "latest"
 pnpm = "10"
+golangci-lint = "2.11.4"
 
 [tasks.init]
 description = "初始化模板中的项目名称、模块路径和仓库信息"
@@ -21,13 +22,34 @@ run = "go get -u ./... && go mod tidy"
 description = "运行 Go 测试"
 run = "go test -v ./..."
 
+[tasks.fmt]
+description = "检查 Go 代码格式"
+raw = true
+run = "golangci-lint fmt -E gofmt --diff"
+
 [tasks.vet]
 description = "运行 Go 静态检查"
+raw = true
 run = "go vet ./..."
+
+[tasks.lint]
+description = "运行 Go lint 检查"
+raw = true
+run = "golangci-lint run"
 
 [tasks.build]
 description = "构建 CLI 二进制"
+raw = true
 run = "go build -trimpath -ldflags='-s -w -X main.version=dev' -o bin/your-cli ."
+
+[tasks.check]
+description = "运行 Go 格式、静态检查、构建和 lint"
+run = [
+  { task = "fmt" },
+  { task = "vet" },
+  { task = "build" },
+  { task = "lint" },
+]
 
 [tasks.run]
 description = "运行 CLI"
