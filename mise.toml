@@ -4,7 +4,7 @@ node = "24"
 "npm:actions-up" = "1"
 "npm:@semanticversion/cli" = "latest"
 pnpm = "10"
-golangci-lint = "2.11.4"
+golangci-lint = "2"
 
 [tasks.init]
 description = "初始化模板中的项目名称、模块路径和仓库信息"
