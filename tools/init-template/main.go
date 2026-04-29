@@ -88,8 +88,8 @@ func run() error {
 		}
 	}
 
-	fmt.Fprintln(os.Stdout, "第三方库版本可能已经过时，建议运行 mise run update 更新 Go 依赖并整理模块。")
-	return nil
+	_, err := fmt.Fprintln(os.Stdout, "第三方库版本可能已经过时，建议运行 mise run update 更新 Go 依赖并整理模块。")
+	return err
 }
 
 func parseFlags() config {
@@ -253,9 +253,13 @@ func (config *config) promptMissing(input *os.File, output *os.File) error {
 
 func prompt(reader *bufio.Reader, output *os.File, label string, defaultValue string) (string, error) {
 	if defaultValue == "" {
-		fmt.Fprintf(output, "%s: ", label)
+		if _, err := fmt.Fprintf(output, "%s: ", label); err != nil {
+			return "", err
+		}
 	} else {
-		fmt.Fprintf(output, "%s [%s]: ", label, defaultValue)
+		if _, err := fmt.Fprintf(output, "%s [%s]: ", label, defaultValue); err != nil {
+			return "", err
+		}
 	}
 
 	value, err := reader.ReadString('\n')

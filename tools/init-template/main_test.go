@@ -61,7 +61,9 @@ func TestResetGitHistoryCreatesFreshRepository(t *testing.T) {
 
 	directory := t.TempDir()
 	t.Chdir(directory)
-	os.WriteFile("main.go", []byte("package main\n"), 0o644)
+	if err := os.WriteFile("main.go", []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	runTestGit(t, "init", "-b", "main")
 	runTestGit(t, "remote", "add", "origin", "https://github.com/YewFence/go-cli-template.git")
