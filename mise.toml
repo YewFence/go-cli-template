@@ -55,10 +55,6 @@ run = [
 description = "运行 CLI"
 run = "go run ."
 
-[tasks.'action:pin']
-description = "运行 Pinact 更新 GitHub Action 版本"
-run = "pinact run -u"
-
 [tasks.'action:check']
 description = "检查 GitHub Action 是否有可更新版本"
 run = "actions-up --json"
