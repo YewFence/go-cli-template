@@ -1,26 +1,22 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  base: '/your-cli/',
+  base: '/{{REPO_NAME}}/',
   lang: 'zh-CN',
-  title: 'your-cli',
-  description: 'Your CLI description',
+  title: '{{PROJECT_NAME}}',
+  description: '{{PROJECT_DESCRIPTION}}',
 
   themeConfig: {
     nav: [
-      { text: '指南', link: '/guide/getting-started' },
-      { text: '开发', link: '/guide/development' },
-      { text: 'GitHub', link: 'https://github.com/example/your-cli' }
+      { text: 'Shell 补全', link: '/guide/completion' },
+      { text: 'GitHub', link: 'https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}' }
     ],
 
     sidebar: [
       {
         text: '指南',
         items: [
-          { text: '快速开始', link: '/guide/getting-started' },
-          { text: '开发指南', link: '/guide/development' },
-          { text: 'Shell 补全', link: '/guide/completion' },
-          { text: '发布流程', link: '/guide/release' }
+          { text: 'Shell 补全', link: '/guide/completion' }
         ]
       }
     ],
@@ -30,12 +26,12 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/example/your-cli' }
+      { icon: 'github', link: 'https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}' }
     ],
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © example'
+      copyright: 'Copyright © {{GITHUB_OWNER}}'
     },
 
     docFooter: {

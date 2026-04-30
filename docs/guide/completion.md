@@ -1,6 +1,6 @@
 # Shell 补全
 
-模板使用 Cobra 原生补全能力，不需要额外引入 `goreleaser`、`usage` 或其他生成工具。
+{{PROJECT_NAME}} 使用 Cobra 原生补全能力，不需要额外引入生成工具。
 
 ## 生成补全脚本
 
@@ -8,19 +8,19 @@
 
 ```bash
 mise run build
-./bin/your-cli completion zsh > _your-cli
-./bin/your-cli completion bash > your-cli.bash
-./bin/your-cli completion fish > your-cli.fish
-./bin/your-cli completion powershell > your-cli.ps1
+./bin/{{PROJECT_NAME}} completion zsh > _{{PROJECT_NAME}}
+./bin/{{PROJECT_NAME}} completion bash > {{PROJECT_NAME}}.bash
+./bin/{{PROJECT_NAME}} completion fish > {{PROJECT_NAME}}.fish
+./bin/{{PROJECT_NAME}} completion powershell > {{PROJECT_NAME}}.ps1
 ```
 
 ## 安装示例
 
-Zsh 可以把生成的 `_your-cli` 放到 `$fpath` 中已有的目录，或者放到自定义目录后在 `~/.zshrc` 里加入该目录。
+Zsh 可以把生成的 `_{{PROJECT_NAME}}` 放到 `$fpath` 中已有的目录，或者放到自定义目录后在 `~/.zshrc` 里加入该目录。
 
 ```bash
 mkdir -p ~/.zsh/completions
-./bin/your-cli completion zsh > ~/.zsh/completions/_your-cli
+./bin/{{PROJECT_NAME}} completion zsh > ~/.zsh/completions/_{{PROJECT_NAME}}
 ```
 
 ```zsh
@@ -33,13 +33,13 @@ Bash 可以把补全脚本放到本地目录后手动 `source`，也可以交给
 
 ```bash
 mkdir -p ~/.bash_completion.d
-./bin/your-cli completion bash > ~/.bash_completion.d/your-cli.bash
-source ~/.bash_completion.d/your-cli.bash
+./bin/{{PROJECT_NAME}} completion bash > ~/.bash_completion.d/{{PROJECT_NAME}}.bash
+source ~/.bash_completion.d/{{PROJECT_NAME}}.bash
 ```
 
 Fish 可以直接写入用户补全目录。
 
 ```bash
 mkdir -p ~/.config/fish/completions
-./bin/your-cli completion fish > ~/.config/fish/completions/your-cli.fish
+./bin/{{PROJECT_NAME}} completion fish > ~/.config/fish/completions/{{PROJECT_NAME}}.fish
 ```
