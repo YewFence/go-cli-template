@@ -1,46 +1,44 @@
 # Go CLI Template
 
-这是一个开箱即用的 Go 命令行项目模板，默认使用 Cobra 组织命令，使用 mise 管理工具链和常用任务，并内置 VitePress 文档站、GitHub Actions 持续集成、文档发布、Actions 更新检查和自动发布流程。
+这是一个开箱即用的 Go 命令行项目模板，默认使用 Cobra 组织命令，使用 mise 管理工具链和常用任务，并内置 VitePress 文档站、GitHub Actions 持续集成、文档发布、Actions 更新检查和自动发布流程
 
-> [!NOTE]
-> 这个仓库是模板项目，创建真实项目后建议先执行初始化，再清理模板专用脚本。
+## 依赖
 
-## 模板里有什么
+[mise](https://github.com/jdx/mise)
+
+## 模板内置工具
 
 | 能力 | 说明 |
 | --- | --- |
 | CLI 框架 | 已接入 Cobra，包含根命令、`version` 子命令和 Shell 补全命令 |
-| 工具链 | 通过 `mise.toml` 固定 Go、Node、pnpm、actions-up 和 golangci-lint 等工具 |
+| 工具链 | 通过 `mise` 引入 Go、Node、pnpm、actions-up 和 golangci-lint 等工具 |
 | 开发任务 | 内置 `tidy`、`update`、`test`、`fmt`、`vet`、`lint`、`check`、`build`、`run` 等 mise 任务 |
 | 文档站 | `docs` 目录内置 VitePress 文档站和 GitHub Pages 工作流 |
-| CI 检查 | GitHub Actions 会检查 Actions 更新、Go 测试构建、依赖审计和文档构建 |
-| 发布流程 | 推送到 `main` 后可按语义化提交自动发布，也支持手动指定标签或推送 `v*` 标签发布 |
+| CI 检查 | GitHub Actions 会自动更新 Actions、运行 Go 测试、构建、依赖审计和文档构建 |
+| 发布流程 | 推送到 `main` 后按约定式提交自动发布语义化版本，也支持手动指定标签或推送 `v*` 标签发布 |
 
-## 创建项目
+## 快速开始
 
-可以在 GitHub 页面点击 `Use this template` 创建新仓库，也可以直接克隆后改成自己的仓库地址。
+1. 点击 `Use this template` 创建新仓库，也可以直接克隆。
 
 ```bash
-git clone https://github.com/example/go-cli-template.git your-cli
+git clone https://github.com/YewFence/go-cli-template.git your-cli
 cd your-cli
 ```
 
-准备本地工具链。
+2. 信任 mise 配置文件并安装开发工具
 
 ```bash
 mise trust
 mise install
 ```
-
-## 初始化模板
-
-`mise run init` 会替换模板内容，移除模板仓库的 origin，并重新初始化当前目录的 Git 历史，让克隆下来的项目从干净的 `main` 分支开始。
-
-交互式初始化会提示输入 Go 模块路径、命令名、GitHub 所属账号或组织、仓库名和项目描述。
+3. 运行初始化任务
 
 ```bash
 mise run init
 ```
+
+该任务会询问 Go 模块路径、命令名、GitHub 所属账号或组织、仓库名和项目描述。然后替换模板内容，移除模板仓库的 origin，并重新初始化当前目录的 Git 历史，让克隆下来的项目从干净的 `main` 分支开始。
 
 也可以一次性传入参数，适合脚本化创建项目。
 
@@ -62,7 +60,7 @@ mise run init -- \
 | `example` | 你的 GitHub 所属账号或组织 |
 | `Your CLI description` | 你的项目描述 |
 
-## 清理模板
+4. 清理模板
 
 初始化完成并确认替换结果没有问题后，可以删除模板专用初始化工具。
 
@@ -70,13 +68,7 @@ mise run init -- \
 rm -rf tools/init-template
 ```
 
-然后从 `mise.toml` 删除 `[tasks.init]` 这一段，避免真实项目里继续保留模板初始化任务。
-
-最后检查是否还有占位内容残留。
-
-```bash
-git grep -n "github.com/example/your-cli\\|your-cli\\|example\\|Your CLI description"
-```
+然后从 `mise.toml` 删除 `[tasks.init]` 一段即可
 
 ## 开发
 
