@@ -40,13 +40,7 @@ func run() error {
 		return err
 	}
 
-	replacements := []replacement{
-		{old: "github.com/example/your-cli", new: config.module},
-		{old: "your-cli", new: config.name},
-		{old: "example", new: config.owner},
-		{old: "your-cli", new: config.repo},
-		{old: "Your CLI description", new: config.description},
-	}
+	replacements := templateReplacements(config)
 
 	if err := filepath.WalkDir(".", func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
@@ -329,6 +323,20 @@ func hasPathSegment(path string, segment string) bool {
 type replacement struct {
 	old string
 	new string
+}
+
+func templateReplacements(config config) []replacement {
+	return []replacement{
+		{old: "{{MODULE_PATH}}", new: config.module},
+		{old: "{{PROJECT_NAME}}", new: config.name},
+		{old: "{{GITHUB_OWNER}}", new: config.owner},
+		{old: "{{REPO_NAME}}", new: config.repo},
+		{old: "{{PROJECT_DESCRIPTION}}", new: config.description},
+		{old: "github.com/example/your-cli", new: config.module},
+		{old: "your-cli", new: config.name},
+		{old: "example", new: config.owner},
+		{old: "Your CLI description", new: config.description},
+	}
 }
 
 func replaceInFile(path string, replacements []replacement) error {

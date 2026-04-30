@@ -1,9 +1,20 @@
 [tools]
+# https://go.dev/
 go = "1.25"
+
+# https://nodejs.org/
 node = "24"
+
+# https://github.com/azat-io/actions-up
 "npm:actions-up" = "1"
+
+# https://github.com/paulhatch/semantic-version
 "npm:@semanticversion/cli" = "latest"
+
+# https://pnpm.io/
 pnpm = "10"
+
+# https://golangci-lint.run/
 golangci-lint = "2"
 
 [tasks.init]

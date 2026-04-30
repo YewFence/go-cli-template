@@ -4,7 +4,9 @@
 
 ## 依赖
 
-[mise](https://github.com/jdx/mise)
+只需要先安装 [mise](https://github.com/jdx/mise)。
+
+其他开发工具由 [mise.toml](mise.toml) 声明，执行 `mise install` 即可安装到当前项目环境。不使用 mise 时，请参考 `mise.toml` 中的工具链接和版本自行安装。
 
 ## 模板内置工具
 
@@ -72,109 +74,7 @@ rm -rf tools/init-template
 
 ## 开发
 
-运行命令行程序。
-
-```bash
-mise run run
-```
-
-整理或更新 Go 依赖。
-
-```bash
-mise run tidy
-mise run update
-```
-
-运行测试、格式检查、静态检查和 lint。
-
-```bash
-mise run test
-mise run fmt
-mise run vet
-mise run lint
-```
-
-也可以使用聚合任务运行格式检查、静态检查、构建和 lint。
-
-```bash
-mise run check
-```
-
-构建本地二进制文件。
-
-```bash
-mise run build
-```
-
-构建产物会输出到 `bin/` 目录。
-
-## 使用命令
-
-初始化后的项目默认包含根命令和版本命令。
-
-```bash
-your-cli
-your-cli version
-```
-
-生成 Shell 补全脚本。
-
-```bash
-your-cli completion zsh > _your-cli
-your-cli completion bash > your-cli.bash
-your-cli completion fish > your-cli.fish
-your-cli completion powershell > your-cli.ps1
-```
-
-## 文档站
-
-安装文档依赖。
-
-```bash
-mise run docs:install
-```
-
-启动本地文档站。
-
-```bash
-mise run docs:dev
-```
-
-构建文档站。
-
-```bash
-mise run docs:build
-```
-
-## GitHub Actions 维护
-
-CI 会检查工作流里的 Action 是否有可更新版本，发现更新时会失败并在摘要中列出结果。
-
-```bash
-mise run action:check
-```
-
-交互式更新 GitHub Action 版本，或自动更新全部 Action 版本。
-
-```bash
-mise run action:update
-mise run action:update:all
-```
-
-## 发布
-
-推送到 `main` 后，Release 工作流会根据 Conventional Commits 解析版本；当存在需要发布的变更时，会自动创建 `v*` 标签、构建多平台二进制文件并发布到 GitHub Release。
-
-```bash
-git push origin main
-```
-
-也可以推送指定的 `v*` 标签，或在 GitHub Actions 页面手动触发 Release 工作流并输入要发布的标签。
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+详情请参考 [README.template.md](README.template.md)
 
 ## 许可证
 

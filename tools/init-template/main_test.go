@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -107,6 +109,113 @@ func TestResetGitHistoryRejectsNestedRepository(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "repository root") {
 		t.Fatalf("resetGitHistory() error = %v, want repository root error", err)
+	}
+}
+
+func TestTemplateReplacementsSupportExplicitPlaceholders(t *testing.T) {
+	config := config{
+		module:      "github.com/acme/widget-module",
+		name:        "widget",
+		owner:       "acme",
+		repo:        "widget-repo",
+		description: "Manage widgets",
+	}
+	replacements := templateReplacements(config)
+
+	directory := t.TempDir()
+	path := filepath.Join(directory, "README.template.md")
+	content := strings.Join([]string{
+		"# {{PROJECT_NAME}}",
+		"{{PROJECT_DESCRIPTION}}",
+		"https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}",
+		"{{MODULE_PATH}}",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := replaceInFile(path, replacements); err != nil {
+		t.Fatalf("replaceInFile() error = %v", err)
+	}
+	output, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(output)
+	for _, want := range []string{
+		"# widget",
+		"Manage widgets",
+		"https://github.com/acme/widget-repo",
+		"github.com/acme/widget-module",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("output missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "{{") {
+		t.Fatalf("output still contains template placeholders:\n%s", got)
+	}
+}
+
+func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
+	directory := t.TempDir()
+	t.Chdir(directory)
+
+	if err := os.WriteFile("README.md", []byte("# Template repository README\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	readmeTemplate := strings.Join([]string{
+		"# {{PROJECT_NAME}}",
+		"{{PROJECT_DESCRIPTION}}",
+		"https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}",
+		"{{MODULE_PATH}}",
+	}, "\n")
+	if err := os.WriteFile("README.template.md", []byte(readmeTemplate), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	oldArgs := os.Args
+	oldCommandLine := flag.CommandLine
+	t.Cleanup(func() {
+		os.Args = oldArgs
+		flag.CommandLine = oldCommandLine
+	})
+	flag.CommandLine = flag.NewFlagSet("init-template", flag.ContinueOnError)
+	os.Args = []string{
+		"init-template",
+		"--module", "github.com/acme/widget-module",
+		"--name", "widget",
+		"--owner", "acme",
+		"--repo", "widget-repo",
+		"--description", "Manage widgets",
+	}
+
+	if err := run(); err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+
+	if _, err := os.Stat("README.template.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("README.template.md stat error = %v, want not exist", err)
+	}
+	output, err := os.ReadFile("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(output)
+	for _, want := range []string{
+		"# widget",
+		"Manage widgets",
+		"https://github.com/acme/widget-repo",
+		"github.com/acme/widget-module",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("README.md missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "Template repository README") {
+		t.Fatalf("README.md still contains the template repository README:\n%s", got)
 	}
 }
 
