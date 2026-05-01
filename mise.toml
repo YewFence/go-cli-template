@@ -1,19 +1,14 @@
 [tools]
 # https://go.dev/
 go = "1.25"
-
 # https://nodejs.org/
 node = "24"
-
 # https://github.com/azat-io/actions-up
 "npm:actions-up" = "1"
-
 # https://github.com/paulhatch/semantic-version
 "npm:@semanticversion/cli" = "latest"
-
 # https://pnpm.io/
 pnpm = "10"
-
 # https://golangci-lint.run/
 golangci-lint = "2"
 
@@ -66,10 +61,6 @@ run = [
 description = "运行 CLI"
 run = "go run ."
 
-[tasks.'action:check']
-description = "检查 GitHub Action 是否有可更新版本"
-run = "actions-up --json"
-
 [tasks.'action:update']
 description = "交互式更新 GitHub Action 版本并默认固定为提交哈希"
 run = "actions-up"
@@ -85,15 +76,18 @@ run = "pnpm install"
 
 [tasks.'docs:dev']
 description = "启动 VitePress 文档站"
+depends = ["docs:install"]
 dir = "docs"
 run = "pnpm dev"
 
 [tasks.'docs:build']
 description = "构建 VitePress 文档站"
+depends = ["docs:install"]
 dir = "docs"
 run = "pnpm build"
 
 [tasks.'docs:preview']
 description = "预览 VitePress 文档站"
+depends = ["docs:install"]
 dir = "docs"
 run = "pnpm preview"
