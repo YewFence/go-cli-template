@@ -83,6 +83,7 @@ func run() error {
 	}
 
 	_, err := fmt.Fprintln(os.Stdout, "第三方库版本可能已经过时，建议运行 mise run update 更新 Go 依赖并整理模块。")
+	_, err := fmt.Fprintln(os.Stdout, "建议 `rm -rf tools` 并删除 `mise.toml` 中的 [tasks.init] 配置，以删除初始化相关的代码和配置。")
 	return err
 }
 
