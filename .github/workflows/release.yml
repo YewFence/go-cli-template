@@ -12,6 +12,11 @@ on:
         description: "要发布的版本 tag"
         required: true
         type: string
+      overwrite_latest_tag:
+        description: "是否覆盖 latest 标签"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -203,3 +208,16 @@ jobs:
           tag_name: ${{ needs.version.outputs.tag }}
           files: dist/*
           generate_release_notes: true
+
+      - name: Move latest tag
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.overwrite_latest_tag }}
+        env:
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch --tags --force
+
+          release_commit="$(git rev-list -n 1 "${RELEASE_TAG}")"
+          git tag -fa latest -m "latest -> ${RELEASE_TAG}" "${release_commit}"
+          git push --force origin refs/tags/latest
