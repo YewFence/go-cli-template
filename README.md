@@ -72,6 +72,31 @@ rm -rf tools/init-template
 
 然后从 `mise.toml` 删除 `[tasks.init]` 一段即可
 
+## 应用到已有项目
+
+如果已有 Go 项目只想复用本模板的工程配置，可以运行已有项目应用工具。该工具不会修改业务代码、`go.mod`、README、Git origin 或 Git 历史，只会覆盖 `mise.toml` 和 `.github/workflows`，并且仅在当前项目没有 `docs` 目录时下载模板文档站。
+
+运行前必须确保 Git 工作区是干净的，工具也会要求输入 `yes` 才继续。运行完成后请使用 `git diff` 查看变更，并按项目需要保留或调整。
+
+```bash
+go run github.com/YewFence/go-cli-template/tools/apply-existing@latest
+git diff
+```
+
+如果需要从指定分支或提交下载模板文件，可以传入 `--ref`。
+
+```bash
+go run github.com/YewFence/go-cli-template/tools/apply-existing@latest --ref main
+```
+
+也可以先下载单文件再运行，适合想先审查源码的场景。
+
+```bash
+tmp="$(mktemp -d)"
+curl -fsSL https://raw.githubusercontent.com/YewFence/go-cli-template/main/tools/apply-existing/main.go -o "$tmp/apply-existing.go"
+go run "$tmp/apply-existing.go"
+```
+
 ## 开发
 
 详情请参考 [README.template.md](README.template.md)

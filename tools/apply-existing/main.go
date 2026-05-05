@@ -1,0 +1,194 @@
+package main
+
+import (
+	"bufio"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+const (
+	defaultRepositoryRawBase = "https://raw.githubusercontent.com/YewFence/go-cli-template"
+	defaultRef               = "main"
+)
+
+var repositoryRawBase = defaultRepositoryRawBase
+
+var newHTTPClient = func() *http.Client {
+	return &http.Client{Timeout: 30 * time.Second}
+}
+
+type config struct {
+	ref string
+}
+
+type templateFile struct {
+	path      string
+	overwrite bool
+}
+
+func main() {
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "apply existing: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	config := parseFlags()
+	if err := ensureCleanGitWorktree(); err != nil {
+		return err
+	}
+	if err := confirmApply(os.Stdin, os.Stdout); err != nil {
+		return err
+	}
+
+	files, err := planTemplateFiles()
+	if err != nil {
+		return err
+	}
+	if err := applyTemplateFiles(config, files); err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(os.Stdout, "已应用模板工程配置，请运行 git diff 检查并自行合并需要的变更。")
+	return err
+}
+
+func parseFlags() config {
+	config := config{}
+	flag.StringVar(&config.ref, "ref", defaultRef, "Template repository ref to download from")
+	flag.Parse()
+	return config
+}
+
+func ensureCleanGitWorktree() error {
+	if _, err := exec.LookPath("git"); err != nil {
+		return fmt.Errorf("find git: %w", err)
+	}
+
+	output, err := gitOutput("status", "--porcelain")
+	if err != nil {
+		return fmt.Errorf("check git status: %w", err)
+	}
+	if strings.TrimSpace(output) != "" {
+		return errors.New("existing project apply requires a clean Git working tree; commit or stash changes first")
+	}
+	return nil
+}
+
+func gitOutput(args ...string) (string, error) {
+	output, err := exec.Command("git", args...).CombinedOutput()
+	if err != nil {
+		if errors.Is(err, exec.ErrNotFound) {
+			return "", fmt.Errorf("find git: %w", err)
+		}
+		return "", fmt.Errorf("git %s: %v: %s", strings.Join(args, " "), err, strings.TrimSpace(string(output)))
+	}
+	return string(output), nil
+}
+
+func confirmApply(input *os.File, output *os.File) error {
+	reader := bufio.NewReader(input)
+	message := "将覆盖 mise.toml 和 .github/workflows，并在 docs 不存在时下载模板文档站，确认继续请输入 yes: "
+	if _, err := fmt.Fprint(output, message); err != nil {
+		return err
+	}
+
+	answer, err := reader.ReadString('\n')
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(answer) != "yes" {
+		return errors.New("apply was not confirmed")
+	}
+	return nil
+}
+
+func planTemplateFiles() ([]templateFile, error) {
+	files := []templateFile{
+		{path: "mise.toml", overwrite: true},
+		{path: ".github/workflows/actions-up.yml", overwrite: true},
+		{path: ".github/workflows/ci.yml", overwrite: true},
+		{path: ".github/workflows/docs.yml", overwrite: true},
+		{path: ".github/workflows/release.yml", overwrite: true},
+	}
+
+	if _, err := os.Stat("docs"); err == nil {
+		fmt.Fprintln(os.Stdout, "检测到 docs 已存在，跳过模板文档站。")
+		return files, nil
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+
+	files = append(files,
+		templateFile{path: "docs/.vitepress/config.ts"},
+		templateFile{path: "docs/index.md"},
+		templateFile{path: "docs/guide/completion.md"},
+		templateFile{path: "docs/package.json"},
+		templateFile{path: "docs/pnpm-lock.yaml"},
+		templateFile{path: "docs/pnpm-workspace.yaml"},
+	)
+	return files, nil
+}
+
+func applyTemplateFiles(config config, files []templateFile) error {
+	client := newHTTPClient()
+	for _, file := range files {
+		if !file.overwrite {
+			if _, err := os.Stat(file.path); err == nil {
+				continue
+			} else if !errors.Is(err, os.ErrNotExist) {
+				return err
+			}
+		}
+
+		content, err := downloadTemplateFile(client, config.ref, file.path)
+		if err != nil {
+			return err
+		}
+		if err := writeFile(file.path, content); err != nil {
+			return err
+		}
+		fmt.Fprintf(os.Stdout, "已写入 %s\n", file.path)
+	}
+	return nil
+}
+
+func downloadTemplateFile(client *http.Client, ref string, path string) ([]byte, error) {
+	url := fmt.Sprintf("%s/%s/%s", strings.TrimRight(repositoryRawBase, "/"), ref, filepath.ToSlash(path))
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("download %s: %w", path, err)
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("download %s: unexpected status %s", path, response.Status)
+	}
+
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", path, err)
+	}
+	return content, nil
+}
+
+func writeFile(path string, content []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(path, content, 0o644)
+}
