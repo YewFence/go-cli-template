@@ -42,6 +42,9 @@ func TestPlanTemplateFilesIncludesDocsWhenDocsMissing(t *testing.T) {
 	if !hasTemplatePath(files, "docs/.vitepress/config.ts") {
 		t.Fatalf("planTemplateFiles() missing docs/.vitepress/config.ts")
 	}
+	if !hasTemplatePath(files, ".gitignore") {
+		t.Fatalf("planTemplateFiles() missing .gitignore")
+	}
 }
 
 func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
@@ -58,6 +61,7 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 		return &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
 			bodyByPath := map[string]string{
 				"/templates/test-ref/mise.toml":     "new mise\n",
+				"/templates/test-ref/.gitignore":    "bin/\ndist/\n",
 				"/templates/test-ref/docs/index.md": "# docs\n",
 			}
 			body, ok := bodyByPath[request.URL.Path]
@@ -82,9 +86,13 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 	if err := os.WriteFile("mise.toml", []byte("old mise\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(".gitignore", []byte("old ignore\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
+		{path: ".gitignore", overwrite: true},
 		{path: "docs/index.md"},
 	}
 	config := config{ref: "test-ref"}
@@ -93,6 +101,7 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 	}
 
 	assertFileContent(t, "mise.toml", "new mise\n")
+	assertFileContent(t, ".gitignore", "bin/\ndist/\n")
 	assertFileContent(t, "docs/index.md", "# docs\n")
 }
 
