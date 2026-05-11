@@ -174,6 +174,9 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	if err := os.WriteFile("README.template.md", []byte(readmeTemplate), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile("renovate.json", []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 
 	oldArgs := os.Args
 	oldCommandLine := flag.CommandLine
@@ -197,6 +200,9 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 
 	if _, err := os.Stat("README.template.md"); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("README.template.md stat error = %v, want not exist", err)
+	}
+	if _, err := os.Stat("renovate.json"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("renovate.json stat error = %v, want not exist", err)
 	}
 	output, err := os.ReadFile("README.md")
 	if err != nil {

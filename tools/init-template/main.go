@@ -63,6 +63,9 @@ func run() error {
 	if err := removeTemplateOrigin(); err != nil {
 		return err
 	}
+	if err := removeTemplateOnlyFiles(); err != nil {
+		return err
+	}
 
 	if _, err := os.Stat("README.template.md"); err == nil {
 		if err := os.Remove("README.md"); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -372,6 +375,15 @@ func removeTemplateOrigin() error {
 	}
 
 	return exec.Command("git", "remote", "remove", "origin").Run()
+}
+
+func removeTemplateOnlyFiles() error {
+	for _, path := range []string{"renovate.json"} {
+		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
 }
 
 func isTemplateOrigin(remoteURL string) bool {

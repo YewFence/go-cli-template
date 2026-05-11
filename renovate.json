@@ -1,0 +1,92 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits"
+  ],
+  "timezone": "Asia/Shanghai",
+  "dependencyDashboard": true,
+  "enabledManagers": [
+    "github-actions",
+    "npm",
+    "gomod",
+    "mise"
+  ],
+  "schedule": [
+    "before 9am on monday"
+  ],
+  "minimumReleaseAge": "3 days",
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "before 9am on monday"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions updates.",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "GitHub Actions",
+      "semanticCommitType": "ci",
+      "commitMessageTopic": "GitHub Actions"
+    },
+    {
+      "description": "Keep npm ranges and pnpm lockfiles current.",
+      "matchManagers": [
+        "npm"
+      ],
+      "groupName": "npm dependencies",
+      "rangeStrategy": "bump",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Tidy Go modules after dependency updates.",
+      "matchManagers": [
+        "gomod"
+      ],
+      "groupName": "Go modules",
+      "postUpdateOptions": [
+        "gomodTidy"
+      ],
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Allow Renovate to bump the Go directive.",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchDepNames": [
+        "go"
+      ],
+      "matchDepTypes": [
+        "golang"
+      ],
+      "rangeStrategy": "bump",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Group mise tool updates.",
+      "matchManagers": [
+        "mise"
+      ],
+      "groupName": "mise tools",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Gate major updates through the dependency dashboard.",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
