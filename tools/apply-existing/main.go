@@ -32,6 +32,7 @@ type config struct {
 type templateFile struct {
 	path      string
 	overwrite bool
+	mode      os.FileMode
 }
 
 func main() {
@@ -115,6 +116,7 @@ func confirmApply(input *os.File, output *os.File) error {
 func planTemplateFiles() ([]templateFile, error) {
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
+		{path: "mise-tasks/build", overwrite: true, mode: 0o755},
 		{path: ".gitignore", overwrite: true},
 		{path: ".github/workflows/actions-up.yml", overwrite: true},
 		{path: ".github/workflows/ci.yml", overwrite: true},
@@ -155,7 +157,7 @@ func applyTemplateFiles(config config, files []templateFile) error {
 		if err != nil {
 			return err
 		}
-		if err := writeFile(file.path, content); err != nil {
+		if err := writeFile(file.path, content, file.mode); err != nil {
 			return err
 		}
 		fmt.Fprintf(os.Stdout, "已写入 %s\n", file.path)
@@ -187,9 +189,12 @@ func downloadTemplateFile(client *http.Client, ref string, path string) ([]byte,
 	return content, nil
 }
 
-func writeFile(path string, content []byte) error {
+func writeFile(path string, content []byte, mode os.FileMode) error {
+	if mode == 0 {
+		mode = 0o644
+	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(path, content, 0o644)
+	return os.WriteFile(path, content, mode)
 }
