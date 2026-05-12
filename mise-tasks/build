@@ -20,6 +20,7 @@ version="${BUILD_VERSION:-dev}"
 output_dir="${BUILD_OUTPUT_DIR:-bin}"
 output_suffix="${BUILD_OUTPUT_SUFFIX:-}"
 output="${BUILD_OUTPUT:-${output_dir}/${binary_name}${output_suffix}}"
+main_package="${MAIN_PACKAGE:-.}"
 
 mkdir -p "$(dirname "${output}")"
-go build -trimpath -ldflags="-s -w -X main.version=${version}" -o "${output}" .
+go build -trimpath -ldflags="-s -w -X main.version=${version}" -o "${output}" "${main_package}"
