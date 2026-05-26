@@ -4,35 +4,23 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
-func configureRootCommand(buffer *bytes.Buffer, args ...string) {
-	rootCmd.SetOut(buffer)
-	rootCmd.SetErr(buffer)
-	rootCmd.SetArgs(args)
-	for _, command := range rootCmd.Commands() {
-		command.SetOut(buffer)
-		command.SetErr(buffer)
-	}
-}
-
-func resetRootCommand() {
-	rootCmd.SetOut(nil)
-	rootCmd.SetErr(nil)
-	rootCmd.SetArgs(nil)
-	for _, command := range rootCmd.Commands() {
-		command.SetOut(nil)
-		command.SetErr(nil)
-	}
+func newTestRootCommand(buffer *bytes.Buffer, args ...string) *cobra.Command {
+	command := NewRootCommand("test")
+	command.SetOut(buffer)
+	command.SetErr(buffer)
+	command.SetArgs(args)
+	return command
 }
 
 func TestRootCommand(t *testing.T) {
 	buffer := new(bytes.Buffer)
-	configureRootCommand(buffer)
+	command := newTestRootCommand(buffer)
 
-	t.Cleanup(resetRootCommand)
-
-	if err := rootCmd.Execute(); err != nil {
+	if err := command.Execute(); err != nil {
 		t.Fatalf("execute root command: %v", err)
 	}
 
@@ -43,12 +31,26 @@ func TestRootCommand(t *testing.T) {
 
 func TestCompletionCommand(t *testing.T) {
 	buffer := new(bytes.Buffer)
+	command := NewRootCommand("test")
 
-	if err := rootCmd.GenBashCompletionV2(buffer, true); err != nil {
+	if err := command.GenBashCompletionV2(buffer, true); err != nil {
 		t.Fatalf("generate bash completion: %v", err)
 	}
 
 	if got := buffer.String(); !strings.Contains(got, "# bash completion V2 for your-cli") {
 		t.Fatalf("unexpected completion output: %q", got)
+	}
+}
+
+func TestVersionCommand(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	command := newTestRootCommand(buffer, "version")
+
+	if err := command.Execute(); err != nil {
+		t.Fatalf("execute version command: %v", err)
+	}
+
+	if got := buffer.String(); got != "your-cli test\n" {
+		t.Fatalf("unexpected output: %q", got)
 	}
 }
