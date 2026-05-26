@@ -74,44 +74,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mise run action:check > actions-up-report.json
+          mise run action:update:all
 
-          mise exec -- node <<'NODE'
-          const fs = require('node:fs')
+          if git diff --quiet -- .github/workflows; then
+            echo "GitHub Actions 已是最新" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
 
-          const report = JSON.parse(fs.readFileSync('actions-up-report.json', 'utf8'))
-          const updates = report.updates ?? []
-          const blockedByMode = report.blockedByMode ?? []
-          const skipped = report.skipped ?? []
+          {
+            echo "## GitHub Actions 更新检查"
+            echo
+            echo "发现可更新的 GitHub Actions，请在本地运行 \`mise run action:update:all\` 后提交变更。"
+            echo
+            echo '```diff'
+            git diff -- .github/workflows
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
 
-          const lines = [
-            '## GitHub Actions 更新检查',
-            '',
-            `状态 ${report.status}`,
-            `发现的 Action 数量 ${report.summary?.totalActions ?? 0}`,
-            `已检查的 Action 数量 ${report.summary?.totalActionsChecked ?? 0}`,
-            `可更新数量 ${updates.length}`,
-            `被模式过滤数量 ${blockedByMode.length}`,
-            `跳过数量 ${skipped.length}`,
-          ]
-
-          if (updates.length > 0) {
-            lines.push('', '| 文件 | Action | 当前版本 | 目标版本 |', '| --- | --- | --- | --- |')
-            for (const update of updates) {
-              const action = update.action ?? {}
-              const file = action.file ?? 'unknown'
-              const line = action.line ?? 1
-              const current = update.currentVersion ?? action.version ?? 'unknown'
-              const target = update.latestVersion ?? update.targetRef ?? 'unknown'
-              lines.push(`| ${file}:${line} | ${action.name ?? 'unknown'} | ${current} | ${target} |`)
-              console.error(`::error file=${file},line=${line}::${action.name ?? 'GitHub Action'} 可以从 ${current} 更新到 ${target}`)
-            }
-          }
-
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join('\n')}\n`)
-
-          if (updates.length > 0) {
-            console.error('发现过期 GitHub Actions，请运行 mise run action:update 或 mise run action:update:all 后提交变更')
-            process.exit(1)
-          }
-          NODE
+          git diff --name-only -- .github/workflows
+          exit 1
