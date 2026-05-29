@@ -23,6 +23,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+    env:
+      MISE_LOCKED: "1"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -63,6 +65,8 @@ jobs:
     name: Check GitHub Actions
     runs-on: ubuntu-latest
     if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) || (github.event_name == 'workflow_dispatch' && !inputs.update)
+    env:
+      MISE_LOCKED: "1"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 

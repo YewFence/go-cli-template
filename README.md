@@ -8,6 +8,8 @@
 
 其他开发工具由 [mise.toml](mise.toml) 声明，执行 `mise install` 即可安装到当前项目环境。不使用 mise 时，请参考 `mise.toml` 中的工具链接和版本自行安装。
 
+本模板提交 [mise.lock](mise.lock) 来固定 `mise.toml` 中声明的工具解析结果。`mise.toml` 可以按项目需要声明主版本、次版本、精确版本或 `latest`，开发者想更新工具链时可以运行 `mise lock` 刷新锁文件并提交变更，CI 和 Release 工作流会使用锁文件安装工具，保证构建可复现。
+
 ## 模板内置工具
 
 | 能力 | 说明 |

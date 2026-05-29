@@ -1,6 +1,9 @@
+[settings]
+lockfile = true
+
 [tools]
 # https://go.dev/
-go = "1.26.3"
+go = "1"
 # https://nodejs.org/
 node = "24"
 # https://github.com/azat-io/actions-up

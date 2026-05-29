@@ -58,6 +58,8 @@ mise run build
 
 本项目需要的开发工具由 [mise.toml](mise.toml) 声明，执行 `mise install` 即可安装到当前项目环境。不使用 mise 时，请参考 `mise.toml` 中的工具链接和版本自行安装。
 
+本项目提交 [mise.lock](mise.lock) 来固定 `mise.toml` 中声明的工具解析结果。更新工具链时运行 `mise lock` 刷新锁文件并提交变更，CI 和 Release 工作流会使用锁文件安装工具，保证构建可复现。
+
 ### 常用命令
 
 完整的 task 列表可运行 `mise tasks` 查看。
@@ -86,7 +88,7 @@ mise run docs:dev
 
 #### GitHub Actions 维护
 
-Github Action 会由[该工作流](.github/workflows/action-update.yml) 在本仓库 PR 打开时自动更新。也可以通过以下命令交互式更新 GitHub Action 版本。
+GitHub Actions 会由[该工作流](.github/workflows/actions-up.yml) 在本仓库 PR 打开时自动更新。也可以通过以下命令交互式更新 GitHub Actions 版本。
 
 > 从其他仓库打开 PR 时会只会检测 Action 版本，不会自动更新。
 
