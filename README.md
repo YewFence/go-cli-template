@@ -14,9 +14,9 @@ This template commits [mise.lock](mise.lock) to pin the resolved tools declared 
 
 | Capability | Description |
 | --- | --- |
-| CLI framework | Cobra is wired in with a root command, a `version` subcommand, and shell completion commands |
+| CLI framework | Cobra is wired in with a root command, a `version` subcommand, shell completion commands, and a `cmd/your-cli` executable entrypoint |
 | Toolchain | Go, Node, pnpm, actions-up, golangci-lint, and related tools are managed through `mise` |
-| Development tasks | Built-in mise tasks include `tidy`, `update`, `test`, `fmt`, `vet`, `lint`, `check`, `build`, and `run` |
+| Development tasks | Built-in mise tasks include `tidy`, `update`, `test`, `fmt`, `vet`, `lint`, `check`, `build`, `cli`, and `cli:install` |
 | Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
 | CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |
 | Release workflow | Pushing to `main` creates semantic releases from Conventional Commits. Manual tags and pushed `v*` tags are also supported |

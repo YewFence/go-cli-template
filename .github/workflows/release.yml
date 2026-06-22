@@ -122,19 +122,14 @@ jobs:
         include:
           - goos: linux
             goarch: amd64
-            suffix: ""
           - goos: linux
             goarch: arm64
-            suffix: ""
           - goos: darwin
             goarch: amd64
-            suffix: ""
           - goos: darwin
             goarch: arm64
-            suffix: ""
           - goos: windows
             goarch: amd64
-            suffix: ".exe"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -165,7 +160,6 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           BUILD_VERSION: ${{ needs.version.outputs.version }}
           BUILD_OUTPUT_DIR: dist
-          BUILD_OUTPUT_SUFFIX: "${{ matrix.suffix }}"
         run: mise run build
 
       - name: Package artifact

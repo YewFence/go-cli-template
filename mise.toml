@@ -63,9 +63,17 @@ run = [
   { task = "lint" },
 ]
 
-[tasks.run]
+[tasks.cli]
 description = "Run the CLI"
-run = "go run ."
+run = "go run ./cmd/..."
+
+[tasks.'cli:install']
+description = "Install the CLI into the local Go bin directory"
+run = 'go install -trimpath -ldflags="-X main.version=${BUILD_VERSION:-dev}" ./cmd/...'
+
+[tasks.build]
+description = "Build the CLI executable"
+run = 'go build -trimpath -ldflags="-s -w -X main.version=${BUILD_VERSION:-dev}" -o "${BUILD_OUTPUT_DIR:-bin}/" ./cmd/...'
 
 [tasks.'action:update']
 description = "Interactively update GitHub Action versions and pin to commit hashes by default"

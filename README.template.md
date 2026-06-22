@@ -23,6 +23,12 @@ mise use github:{{GITHUB_OWNER}}/{{REPO_NAME}}
 #### Build From Source
 
 ```bash
+go install github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}/cmd/{{PROJECT_NAME}}@latest
+```
+
+#### Build Locally
+
+```bash
 git clone https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}.git
 cd {{REPO_NAME}}
 mise trust
@@ -68,7 +74,9 @@ Run `mise tasks` to see the full task list.
 
 ```bash
 # Run the CLI
-mise run run
+mise run cli
+# Install the CLI into your local Go bin directory
+mise run cli:install
 # Tidy Go module dependencies
 mise run tidy
 # Run formatting checks, static checks, build, and lint
