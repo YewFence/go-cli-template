@@ -66,6 +66,8 @@ The development tools required by this project are declared in [mise.toml](mise.
 
 This project commits [mise.lock](mise.lock) to pin the resolved tools declared in `mise.toml`. To update the toolchain, run `mise lock`, commit the refreshed lockfile, and the CI and Release workflows will install tools from the lockfile for reproducible builds.
 
+This project is intentionally shaped as a single-command CLI. The executable entrypoint lives under `cmd/{{PROJECT_NAME}}`, and the mise build, run, install, and release tasks use `./cmd/...` so Go derives the binary name from that entrypoint directory. If you add more executable entrypoints under `cmd/`, adjust those tasks and the release packaging logic at the same time.
+
 ### Common Commands
 
 Run `mise tasks` to see the full task list.

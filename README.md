@@ -44,6 +44,8 @@ mise run init
 
 This task asks for the Go module path, command name, GitHub owner or organization, repository name, and project description. It then replaces the template content, removes the template repository origin, and reinitializes the Git history in the current directory so the cloned project starts from a clean `main` branch.
 
+The generated project is intentionally shaped as a single-command CLI. The executable entrypoint lives under `cmd/<command-name>`, and the mise build, run, install, and release tasks use `./cmd/...` so Go derives the binary name from that entrypoint directory. If you add more executable entrypoints under `cmd/`, adjust those tasks and the release packaging logic at the same time.
+
 You can also pass all values at once, which is useful for scripted project creation.
 
 ```bash
