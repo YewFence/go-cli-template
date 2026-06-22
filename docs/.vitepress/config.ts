@@ -2,21 +2,21 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   base: '/{{REPO_NAME}}/',
-  lang: 'zh-CN',
+  lang: 'en-US',
   title: '{{PROJECT_NAME}}',
   description: '{{PROJECT_DESCRIPTION}}',
 
   themeConfig: {
     nav: [
-      { text: 'Shell 补全', link: '/guide/completion' },
+      { text: 'Shell Completion', link: '/guide/completion' },
       { text: 'GitHub', link: 'https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}' }
     ],
 
     sidebar: [
       {
-        text: '指南',
+        text: 'Guide',
         items: [
-          { text: 'Shell 补全', link: '/guide/completion' }
+          { text: 'Shell Completion', link: '/guide/completion' }
         ]
       }
     ],
@@ -35,16 +35,16 @@ export default defineConfig({
     },
 
     docFooter: {
-      prev: '上一页',
-      next: '下一页'
+      prev: 'Previous page',
+      next: 'Next page'
     },
 
     outline: {
-      label: '本页目录'
+      label: 'On this page'
     },
 
     lastUpdated: {
-      text: '最后更新'
+      text: 'Last updated'
     }
   }
 })

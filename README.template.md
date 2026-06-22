@@ -7,20 +7,20 @@
 {{PROJECT_DESCRIPTION}}
 
 > [!NOTE]
-> 本项目目前处于早期开发阶段，核心功能可能缺失，无法保证向后兼容性。
+> This project is in an early development stage. Core features may be missing, and backward compatibility is not guaranteed.
 
-## 快速开始
+## Quick Start
 
-### 安装
+### Installation
 
 #### Mise
 
 ```bash
-# 仅在当前目录生效，如果需要安装到全局，请加上 -g 参数
+# Applies only to the current directory. Add -g to install globally.
 mise use github:{{GITHUB_OWNER}}/{{REPO_NAME}}
 ```
 
-#### 从源码构建
+#### Build From Source
 
 ```bash
 git clone https://github.com/{{GITHUB_OWNER}}/{{REPO_NAME}}.git
@@ -30,14 +30,14 @@ mise install
 mise run build
 ```
 
-### 使用
+### Usage
 
 ```bash
 {{PROJECT_NAME}}
 {{PROJECT_NAME}} version
 ```
 
-生成 Shell 补全脚本。
+Generate shell completion scripts.
 
 ```bash
 {{PROJECT_NAME}} completion zsh > _{{PROJECT_NAME}}
@@ -46,71 +46,71 @@ mise run build
 {{PROJECT_NAME}} completion powershell > {{PROJECT_NAME}}.ps1
 ```
 
-## 文档
+## Documentation
 
-更多信息可查阅[文档站](https://{{GITHUB_OWNER}}.github.io/{{REPO_NAME}})
+See the [documentation site](https://{{GITHUB_OWNER}}.github.io/{{REPO_NAME}}) for more information.
 
-## 开发
+## Development
 
-### 依赖
+### Requirements
 
-推荐使用 [mise](https://github.com/jdx/mise) 管理开发工具。
+[mise](https://github.com/jdx/mise) is recommended for managing development tools.
 
-本项目需要的开发工具由 [mise.toml](mise.toml) 声明，执行 `mise install` 即可安装到当前项目环境。不使用 mise 时，请参考 `mise.toml` 中的工具链接和版本自行安装。
+The development tools required by this project are declared in [mise.toml](mise.toml). Run `mise install` to install them into the current project environment. If you do not use mise, install the tools manually using the links and versions in `mise.toml`.
 
-本项目提交 [mise.lock](mise.lock) 来固定 `mise.toml` 中声明的工具解析结果。更新工具链时运行 `mise lock` 刷新锁文件并提交变更，CI 和 Release 工作流会使用锁文件安装工具，保证构建可复现。
+This project commits [mise.lock](mise.lock) to pin the resolved tools declared in `mise.toml`. To update the toolchain, run `mise lock`, commit the refreshed lockfile, and the CI and Release workflows will install tools from the lockfile for reproducible builds.
 
-### 常用命令
+### Common Commands
 
-完整的 task 列表可运行 `mise tasks` 查看。
+Run `mise tasks` to see the full task list.
 
-#### 主程序
+#### CLI
 
 ```bash
-# 运行命令行程序
+# Run the CLI
 mise run run
-# 整理 Go 模块依赖
+# Tidy Go module dependencies
 mise run tidy
-# 运行格式检查、静态检查、构建和 lint
+# Run formatting checks, static checks, build, and lint
 mise run check
-# 本地构建可执行文件，构建产物会输出到 `bin/` 目录
+# Build a local executable. Build artifacts are written to the `bin/` directory.
 mise run build
 ```
 
-#### 文档站
+#### Documentation Site
 
 ```bash
-# 安装依赖
+# Install dependencies
 mise run docs:install
-# 本地启动文档站开发服务器
+# Start the local documentation development server
 mise run docs:dev
 ```
 
-#### GitHub Actions 维护
+#### GitHub Actions Maintenance
 
-GitHub Actions 会由[该工作流](.github/workflows/actions-up.yml) 在本仓库 PR 打开时自动更新。也可以通过以下命令交互式更新 GitHub Actions 版本。
+GitHub Actions are automatically updated by [this workflow](.github/workflows/actions-up.yml) when a pull request is opened in this repository. You can also update GitHub Actions versions interactively with the following command.
 
-> 从其他仓库打开 PR 时会只会检测 Action 版本，不会自动更新。
+> Pull requests opened from other repositories only check Action versions and do not update them automatically.
 
 ```bash
 mise run action:update
 ```
 
-#### 发布
+#### Release
 
-推送到 `main` 后，Release 工作流会根据 Conventional Commits 解析版本。当存在需要发布的变更时，会自动创建 `v*` 标签、构建多平台二进制文件并发布到 GitHub Release。
+After pushing to `main`, the Release workflow derives the version from Conventional Commits. When there are releasable changes, it automatically creates a `v*` tag, builds multi-platform binaries, and publishes them to GitHub Releases.
 
 ```bash
 git push origin main
 ```
 
-也可以推送指定的 `v*` 标签，或在 GitHub Actions 页面手动触发 Release 工作流并输入要发布的标签。
+You can also push a specific `v*` tag, or trigger the Release workflow manually from the GitHub Actions page and enter the tag to publish.
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-## 许可证
+## License
 
 [MIT License](LICENSE)

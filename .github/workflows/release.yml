@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "要发布的版本 tag"
+        description: "Version tag to publish"
         required: true
         type: string
       overwrite_latest_tag:
-        description: "是否覆盖 latest 标签"
+        description: "Whether to overwrite the latest tag"
         required: false
         type: boolean
         default: false
@@ -35,7 +35,7 @@ jobs:
       - name: Ensure tag input
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
         run: |
-          echo "tag 不能为空"
+          echo "tag must not be empty"
           exit 1
 
       - name: Checkout code
@@ -62,7 +62,7 @@ jobs:
         run: |
           tag="${INPUT_TAG:-${REF_NAME}}"
           if [[ -z "${tag}" ]]; then
-            echo "tag 不能为空"
+            echo "tag must not be empty"
             exit 1
           fi
 
@@ -175,7 +175,7 @@ jobs:
         run: |
           binary_path="$(find dist -maxdepth 1 -type f ! -name '*.tar.gz' ! -name '*.zip' -print -quit)"
           if [[ -z "${binary_path}" ]]; then
-            echo "没有找到构建产物"
+            echo "No build artifact was found"
             exit 1
           fi
           binary_name="$(basename "${binary_path}")"
@@ -222,10 +222,10 @@ jobs:
             existing_commit="$(git rev-list -n 1 "${RELEASE_TAG}")"
             current_commit="$(git rev-parse HEAD)"
             if [[ "${existing_commit}" != "${current_commit}" ]]; then
-              echo "tag ${RELEASE_TAG} 已存在，但不指向当前提交"
+              echo "tag ${RELEASE_TAG} already exists, but it does not point to the current commit"
               exit 1
             fi
-            echo "tag ${RELEASE_TAG} 已存在，跳过创建"
+            echo "tag ${RELEASE_TAG} already exists. Skipping tag creation"
           else
             git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}"
             git push origin "${RELEASE_TAG}"

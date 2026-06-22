@@ -1,50 +1,50 @@
 # Go CLI Template
 
-这是一个开箱即用的 Go 命令行项目模板，默认使用 Cobra 组织命令，使用 mise 管理工具链和常用任务，并内置 VitePress 文档站、GitHub Actions 持续集成、文档发布、Actions 更新检查和自动发布流程
+This is a ready-to-use Go CLI project template. It uses Cobra for command organization, mise for toolchain and task management, and includes a VitePress documentation site, GitHub Actions continuous integration, documentation publishing, GitHub Actions update checks, and automated releases.
 
-## 依赖
+## Requirements
 
-只需要先安装 [mise](https://github.com/jdx/mise)。
+Install [mise](https://github.com/jdx/mise) first.
 
-其他开发工具由 [mise.toml](mise.toml) 声明，执行 `mise install` 即可安装到当前项目环境。不使用 mise 时，请参考 `mise.toml` 中的工具链接和版本自行安装。
+Other development tools are declared in [mise.toml](mise.toml). Run `mise install` to install them into the current project environment. If you do not use mise, install the tools manually using the links and versions in `mise.toml`.
 
-本模板提交 [mise.lock](mise.lock) 来固定 `mise.toml` 中声明的工具解析结果。`mise.toml` 可以按项目需要声明主版本、次版本、精确版本或 `latest`，开发者想更新工具链时可以运行 `mise lock` 刷新锁文件并提交变更，CI 和 Release 工作流会使用锁文件安装工具，保证构建可复现。
+This template commits [mise.lock](mise.lock) to pin the resolved tools declared in `mise.toml`. `mise.toml` can declare major versions, minor versions, exact versions, or `latest` based on project needs. To update the toolchain, run `mise lock`, commit the refreshed lockfile, and the CI and Release workflows will install tools from the lockfile for reproducible builds.
 
-## 模板内置工具
+## Included Tooling
 
-| 能力 | 说明 |
+| Capability | Description |
 | --- | --- |
-| CLI 框架 | 已接入 Cobra，包含根命令、`version` 子命令和 Shell 补全命令 |
-| 工具链 | 通过 `mise` 引入 Go、Node、pnpm、actions-up 和 golangci-lint 等工具 |
-| 开发任务 | 内置 `tidy`、`update`、`test`、`fmt`、`vet`、`lint`、`check`、`build`、`run` 等 mise 任务 |
-| 文档站 | `docs` 目录内置 VitePress 文档站和 GitHub Pages 工作流 |
-| CI 检查 | GitHub Actions 会自动更新 Actions、运行 Go 测试、构建、依赖审计和文档构建 |
-| 发布流程 | 推送到 `main` 后按约定式提交自动发布语义化版本，也支持手动指定标签或推送 `v*` 标签发布 |
+| CLI framework | Cobra is wired in with a root command, a `version` subcommand, and shell completion commands |
+| Toolchain | Go, Node, pnpm, actions-up, golangci-lint, and related tools are managed through `mise` |
+| Development tasks | Built-in mise tasks include `tidy`, `update`, `test`, `fmt`, `vet`, `lint`, `check`, `build`, and `run` |
+| Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
+| CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |
+| Release workflow | Pushing to `main` creates semantic releases from Conventional Commits. Manual tags and pushed `v*` tags are also supported |
 
-## 快速开始
+## Quick Start
 
-1. 点击 `Use this template` 创建新仓库，也可以直接克隆。
+1. Click `Use this template` to create a new repository, or clone this repository directly.
 
 ```bash
 git clone https://github.com/YewFence/go-cli-template.git your-cli
 cd your-cli
 ```
 
-2. 信任 mise 配置文件并安装开发工具
+2. Trust the mise configuration and install development tools.
 
 ```bash
 mise trust
 mise install
 ```
-3. 运行初始化任务
+3. Run the initialization task.
 
 ```bash
 mise run init
 ```
 
-该任务会询问 Go 模块路径、命令名、GitHub 所属账号或组织、仓库名和项目描述。然后替换模板内容，移除模板仓库的 origin，并重新初始化当前目录的 Git 历史，让克隆下来的项目从干净的 `main` 分支开始。
+This task asks for the Go module path, command name, GitHub owner or organization, repository name, and project description. It then replaces the template content, removes the template repository origin, and reinitializes the Git history in the current directory so the cloned project starts from a clean `main` branch.
 
-也可以一次性传入参数，适合脚本化创建项目。
+You can also pass all values at once, which is useful for scripted project creation.
 
 ```bash
 mise run init -- \
@@ -55,43 +55,43 @@ mise run init -- \
   --description "Your CLI description"
 ```
 
-初始化会替换项目里的这些模板默认值。
+Initialization replaces these template defaults.
 
-| 模板默认值 | 替换为 |
+| Template default | Replaced with |
 | --- | --- |
-| `github.com/example/your-cli` | 你的 Go 模块路径 |
-| `your-cli` | 你的命令名 |
-| `example` | 你的 GitHub 所属账号或组织 |
-| `Your CLI description` | 你的项目描述 |
+| `github.com/example/your-cli` | Your Go module path |
+| `your-cli` | Your command name |
+| `example` | Your GitHub owner or organization |
+| `Your CLI description` | Your project description |
 
-4. 清理模板
+4. Clean up template-only files.
 
-初始化完成并确认替换结果没有问题后，可以删除模板专用初始化工具。
+After initialization is complete and the replacement result looks correct, remove the template-only initialization tool.
 
 ```bash
 rm -rf tools/init-template
 ```
 
-然后从 `mise.toml` 删除 `[tasks.init]` 一段即可
+Then remove the `[tasks.init]` section from `mise.toml`.
 
-## 应用到已有项目
+## Apply To An Existing Project
 
-如果已有 Go 项目只想复用本模板的工程配置，可以运行已有项目应用工具。该工具不会修改业务代码、`go.mod`、README、Git origin 或 Git 历史，只会覆盖 `mise.toml`、`.gitignore` 和 `.github/workflows`，并且仅在当前项目没有 `docs` 目录时下载模板文档站。
+If you already have a Go project and only want to reuse this template's project configuration, run the existing-project apply tool. It does not modify application code, `go.mod`, README, Git origin, or Git history. It only overwrites `mise.toml`, `.gitignore`, and `.github/workflows`, and downloads the template documentation site only when the current project does not already have a `docs` directory.
 
-运行前必须确保 Git 工作区是干净的，工具也会要求输入 `yes` 才继续。运行完成后请使用 `git diff` 查看变更，并按项目需要保留或调整。
+Before running it, make sure the Git working tree is clean. The tool also asks you to type `yes` before continuing. After it finishes, use `git diff` to review the changes and keep or adjust them as needed.
 
 ```bash
 go run github.com/YewFence/go-cli-template/tools/apply-existing@latest
 git diff
 ```
 
-如果需要从指定分支或提交下载模板文件，可以传入 `--ref`。
+Pass `--ref` to download template files from a specific branch or commit.
 
 ```bash
 go run github.com/YewFence/go-cli-template/tools/apply-existing@latest --ref main
 ```
 
-也可以先下载单文件再运行，适合想先审查源码的场景。
+You can also download the single file first and run it locally, which is useful when you want to review the source before executing it.
 
 ```bash
 tmp="$(mktemp -d)"
@@ -99,10 +99,10 @@ curl -fsSL https://raw.githubusercontent.com/YewFence/go-cli-template/main/tools
 go run "$tmp/apply-existing.go"
 ```
 
-## 开发
+## Development
 
-详情请参考 [README.template.md](README.template.md)
+See [README.template.md](README.template.md) for details.
 
-## 许可证
+## License
 
 [MIT License](LICENSE)

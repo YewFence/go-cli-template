@@ -85,8 +85,8 @@ func run() error {
 		}
 	}
 
-	_, err := fmt.Fprintln(os.Stdout, "第三方库版本可能已经过时，建议运行 mise run update 更新 Go 依赖并整理模块。")
-	_, err = fmt.Fprintln(os.Stdout, "如果你不再需要模板初始化工具，可以手动删除 `tools/init-template`，并从 `mise.toml` 中移除 `[tasks.init]` 配置。")
+	_, err := fmt.Fprintln(os.Stdout, "Third-party library versions may be outdated. Run mise run update to update Go dependencies and tidy modules.")
+	_, err = fmt.Fprintln(os.Stdout, "If you no longer need the template initialization tool, delete `tools/init-template` and remove the `[tasks.init]` configuration from `mise.toml`.")
 	return err
 }
 

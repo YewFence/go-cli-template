@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="构建 CLI 可执行文件"
+#MISE description="Build the CLI executable"
 set -euo pipefail
 
 module="$(go list -m)"

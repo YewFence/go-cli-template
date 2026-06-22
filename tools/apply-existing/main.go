@@ -59,7 +59,7 @@ func run() error {
 		return err
 	}
 
-	_, err = fmt.Fprintln(os.Stdout, "已应用模板工程配置，请运行 git diff 检查并自行合并需要的变更。")
+	_, err = fmt.Fprintln(os.Stdout, "Template project configuration has been applied. Run git diff to review and merge the changes you need.")
 	return err
 }
 
@@ -98,7 +98,7 @@ func gitOutput(args ...string) (string, error) {
 
 func confirmApply(input *os.File, output *os.File) error {
 	reader := bufio.NewReader(input)
-	message := "将覆盖 mise.toml、.gitignore 和 .github/workflows，并在 docs 不存在时下载模板文档站，确认继续请输入 yes: "
+	message := "This will overwrite mise.toml, .gitignore, and .github/workflows, and download the template documentation site when docs does not exist. Type yes to continue: "
 	if _, err := fmt.Fprint(output, message); err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func planTemplateFiles() ([]templateFile, error) {
 	}
 
 	if _, err := os.Stat("docs"); err == nil {
-		fmt.Fprintln(os.Stdout, "检测到 docs 已存在，跳过模板文档站。")
+		fmt.Fprintln(os.Stdout, "Detected an existing docs directory. Skipping the template documentation site.")
 		return files, nil
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return nil, err
@@ -160,7 +160,7 @@ func applyTemplateFiles(config config, files []templateFile) error {
 		if err := writeFile(file.path, content, file.mode); err != nil {
 			return err
 		}
-		fmt.Fprintf(os.Stdout, "已写入 %s\n", file.path)
+		fmt.Fprintf(os.Stdout, "Wrote %s\n", file.path)
 	}
 	return nil
 }
