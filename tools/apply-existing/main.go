@@ -116,7 +116,6 @@ func confirmApply(input *os.File, output *os.File) error {
 func planTemplateFiles() ([]templateFile, error) {
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
-		{path: "mise-tasks/build", overwrite: true, mode: 0o755},
 		{path: ".gitignore", overwrite: true},
 		{path: ".github/workflows/actions-up.yml", overwrite: true},
 		{path: ".github/workflows/ci.yml", overwrite: true},

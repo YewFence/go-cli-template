@@ -45,9 +45,6 @@ func TestPlanTemplateFilesIncludesDocsWhenDocsMissing(t *testing.T) {
 	if !hasTemplatePath(files, ".gitignore") {
 		t.Fatalf("planTemplateFiles() missing .gitignore")
 	}
-	if !hasTemplatePath(files, "mise-tasks/build") {
-		t.Fatalf("planTemplateFiles() missing mise-tasks/build")
-	}
 }
 
 func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
@@ -63,10 +60,9 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 	newHTTPClient = func() *http.Client {
 		return &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
 			bodyByPath := map[string]string{
-				"/templates/test-ref/mise.toml":        "new mise\n",
-				"/templates/test-ref/.gitignore":       "bin/\ndist/\n",
-				"/templates/test-ref/mise-tasks/build": "#!/usr/bin/env bash\n",
-				"/templates/test-ref/docs/index.md":    "# docs\n",
+				"/templates/test-ref/mise.toml":     "new mise\n",
+				"/templates/test-ref/.gitignore":    "bin/\ndist/\n",
+				"/templates/test-ref/docs/index.md": "# docs\n",
 			}
 			body, ok := bodyByPath[request.URL.Path]
 			if !ok {
@@ -97,7 +93,6 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
 		{path: ".gitignore", overwrite: true},
-		{path: "mise-tasks/build", overwrite: true, mode: 0o755},
 		{path: "docs/index.md"},
 	}
 	config := config{ref: "test-ref"}
@@ -107,8 +102,6 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 
 	assertFileContent(t, "mise.toml", "new mise\n")
 	assertFileContent(t, ".gitignore", "bin/\ndist/\n")
-	assertFileContent(t, "mise-tasks/build", "#!/usr/bin/env bash\n")
-	assertFileMode(t, "mise-tasks/build", 0o755)
 	assertFileContent(t, "docs/index.md", "# docs\n")
 }
 

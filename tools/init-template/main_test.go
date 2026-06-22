@@ -158,6 +158,65 @@ func TestTemplateReplacementsSupportExplicitPlaceholders(t *testing.T) {
 	}
 }
 
+func TestTemplateReplacementsDoNotRewriteNewModulePathCommandName(t *testing.T) {
+	config := config{
+		module:      "github.com/acme/your-cli-tools",
+		name:        "tool",
+		owner:       "acme",
+		repo:        "your-cli-tools",
+		description: "Manage tools",
+	}
+	replacements := templateReplacements(config)
+
+	directory := t.TempDir()
+	path := filepath.Join(directory, "main.go")
+	content := strings.Join([]string{
+		`import "github.com/example/your-cli/internal/cli"`,
+		`const commandName = "your-cli"`,
+	}, "\n")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := replaceInFile(path, replacements); err != nil {
+		t.Fatalf("replaceInFile() error = %v", err)
+	}
+	output, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(output)
+	if !strings.Contains(got, `github.com/acme/your-cli-tools/internal/cli`) {
+		t.Fatalf("module path was rewritten incorrectly:\n%s", got)
+	}
+	if !strings.Contains(got, `const commandName = "tool"`) {
+		t.Fatalf("command name was not rewritten:\n%s", got)
+	}
+}
+
+func TestRenameCLIEntrypoint(t *testing.T) {
+	directory := t.TempDir()
+	t.Chdir(directory)
+
+	if err := os.MkdirAll("cmd/your-cli", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("cmd/your-cli/main.go", []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := renameCLIEntrypoint("widget"); err != nil {
+		t.Fatalf("renameCLIEntrypoint() error = %v", err)
+	}
+	if _, err := os.Stat("cmd/your-cli"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("cmd/your-cli stat error = %v, want not exist", err)
+	}
+	if _, err := os.Stat("cmd/widget/main.go"); err != nil {
+		t.Fatalf("cmd/widget/main.go stat error = %v", err)
+	}
+}
+
 func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	directory := t.TempDir()
 	t.Chdir(directory)
@@ -175,6 +234,12 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile("renovate.json", []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll("cmd/your-cli", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("cmd/your-cli/main.go", []byte("package main\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -203,6 +268,9 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	}
 	if _, err := os.Stat("renovate.json"); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("renovate.json stat error = %v, want not exist", err)
+	}
+	if _, err := os.Stat("cmd/widget/main.go"); err != nil {
+		t.Fatalf("cmd/widget/main.go stat error = %v", err)
 	}
 	output, err := os.ReadFile("README.md")
 	if err != nil {

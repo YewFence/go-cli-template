@@ -60,6 +60,9 @@ func run() error {
 		return err
 	}
 
+	if err := renameCLIEntrypoint(config.name); err != nil {
+		return err
+	}
 	if err := removeTemplateOrigin(); err != nil {
 		return err
 	}
@@ -324,6 +327,26 @@ func hasPathSegment(path string, segment string) bool {
 	return false
 }
 
+func renameCLIEntrypoint(name string) error {
+	templateEntrypoint := filepath.Join("cmd", "your-cli")
+	targetEntrypoint := filepath.Join("cmd", name)
+	if targetEntrypoint == templateEntrypoint {
+		return nil
+	}
+	if _, err := os.Stat(templateEntrypoint); errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else if err != nil {
+		return err
+	}
+	if err := os.RemoveAll(targetEntrypoint); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(targetEntrypoint), 0o755); err != nil {
+		return err
+	}
+	return os.Rename(templateEntrypoint, targetEntrypoint)
+}
+
 type replacement struct {
 	old string
 	new string
@@ -337,8 +360,8 @@ func templateReplacements(config config) []replacement {
 		{old: "{{REPO_NAME}}", new: config.repo},
 		{old: "{{PROJECT_DESCRIPTION}}", new: config.description},
 		{old: "github.com/example/your-cli", new: config.module},
-		{old: "your-cli", new: config.name},
 		{old: "example", new: config.owner},
+		{old: "your-cli", new: config.name},
 		{old: "Your CLI description", new: config.description},
 	}
 }
@@ -349,10 +372,12 @@ func replaceInFile(path string, replacements []replacement) error {
 		return err
 	}
 
-	updated := string(content)
+	const modulePlaceholder = "\x00MODULE_PATH\x00"
+	updated := strings.ReplaceAll(string(content), "github.com/example/your-cli", modulePlaceholder)
 	for _, replacement := range replacements {
 		updated = strings.ReplaceAll(updated, replacement.old, replacement.new)
 	}
+	updated = strings.ReplaceAll(updated, modulePlaceholder, replacementValue(replacements, "github.com/example/your-cli"))
 	if updated == string(content) {
 		return nil
 	}
@@ -362,6 +387,15 @@ func replaceInFile(path string, replacements []replacement) error {
 		return err
 	}
 	return os.WriteFile(path, []byte(updated), info.Mode())
+}
+
+func replacementValue(replacements []replacement, old string) string {
+	for _, replacement := range replacements {
+		if replacement.old == old {
+			return replacement.new
+		}
+	}
+	return old
 }
 
 func removeTemplateOrigin() error {
