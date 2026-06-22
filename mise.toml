@@ -5,13 +5,13 @@ lockfile = true
 # https://go.dev/
 go = "1"
 # https://nodejs.org/
-node = "24"
+node = "26"
 # https://github.com/azat-io/actions-up
 "npm:actions-up" = "1"
 # https://github.com/paulhatch/semantic-version
 "npm:@semanticversion/cli" = "latest"
 # https://pnpm.io/
-pnpm = "10"
+pnpm = "11"
 # https://golangci-lint.run/
 golangci-lint = "2"
 
