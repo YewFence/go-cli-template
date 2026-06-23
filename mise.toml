@@ -27,10 +27,6 @@ run = "go mod tidy"
 description = "Check whether Go module dependencies are tidy"
 run = "go mod tidy && git diff --exit-code go.mod go.sum"
 
-[tasks.'mod:verify']
-description = "Verify Go module dependencies"
-run = "go mod verify"
-
 [tasks.update]
 description = "Update Go dependencies and tidy modules"
 run = "go get -u ./... && go mod tidy"
@@ -79,10 +75,6 @@ run = 'go build -trimpath -ldflags="-s -w -X main.version=${BUILD_VERSION:-dev}"
 [tasks.'action:update']
 description = "Interactively update GitHub Action versions and pin to commit hashes by default"
 run = "actions-up"
-
-[tasks.'action:update:all']
-description = "Automatically update all GitHub Action versions and pin to commit hashes by default"
-run = "actions-up --yes"
 
 [tasks.'docs:install']
 description = "Install documentation site dependencies"
