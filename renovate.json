@@ -25,7 +25,7 @@
       "groupName": "npm dependencies",
       "rangeStrategy": "bump",
       "semanticCommitType": "chore",
-      "semanticCommitScope": "deps"
+      "semanticCommitScope": "npm-deps"
     },
     {
       "description": "Tidy Go modules after dependency updates.",
@@ -34,23 +34,34 @@
       "groupName": "Go modules",
       "postUpdateOptions": ["gomodTidy"],
       "semanticCommitType": "chore",
-      "semanticCommitScope": "deps"
+      "semanticCommitScope": "gomod-deps"
     },
     {
       "description": "Group mise tool updates.",
       "matchManagers": ["mise"],
       "groupName": "mise tools",
+      "rangeStrategy": "update-lockfile",
       "semanticCommitType": "chore",
-      "semanticCommitScope": "deps"
+      "semanticCommitScope": "mise-deps"
     },
     {
       "description": "Group Go toolchain updates.",
-      "matchManagers": ["gomod", "mise"],
+      "matchManagers": ["mise"],
       "matchDepNames": ["go"],
+      "groupName": "Go toolchain",
+      "rangeStrategy": "update-lockfile",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "go-deps"
+    },
+    {
+      "description": "Allow Renovate to bump the Go directive.",
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
       "groupName": "Go toolchain",
       "rangeStrategy": "bump",
       "semanticCommitType": "chore",
-      "semanticCommitScope": "deps"
+      "semanticCommitScope": "go-deps"
     },
     {
       "description": "Gate major updates through the dependency dashboard.",
