@@ -17,6 +17,7 @@ This template commits [mise.lock](mise.lock) to pin the resolved tools declared 
 | CLI framework | Cobra is wired in with a root command, a `version` subcommand, shell completion commands, and a `cmd/your-cli` executable entrypoint |
 | Toolchain | Go, Node, pnpm, actions-up, golangci-lint, and related tools are managed through `mise` |
 | Development tasks | Built-in mise tasks include `tidy`, `update`, `test`, `fmt`, `vet`, `lint`, `check`, `build`, `cli`, and `cli:install` |
+| Agent instructions | `AGENTS.template.md` becomes `AGENTS.md` after initialization. It tells future development agents to run `mise run check` after Go code changes and notes that the generated project is still early enough to avoid backward-compatibility constraints |
 | Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
 | CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |
 | Release workflow | Pushing to `main` creates semantic releases from Conventional Commits. Manual tags and pushed `v*` tags are also supported |
@@ -43,6 +44,8 @@ mise run init
 ```
 
 This task asks for the Go module path, command name, GitHub owner or organization, repository name, and project description. It then replaces the template content, removes the template repository origin, and reinitializes the Git history in the current directory so the cloned project starts from a clean `main` branch.
+
+Initialization also replaces this repository's `AGENTS.md` with the generated project's `AGENTS.template.md`. The preset agent prompt assumes early-stage development, requires `mise run check` after Go changes, and can be adjusted once your project moves into stable maintenance.
 
 The generated project is intentionally shaped as a single-command CLI. The executable entrypoint lives under `cmd/<command-name>`, and the mise build, run, install, and release tasks use `./cmd/...` so Go derives the binary name from that entrypoint directory. If you add more executable entrypoints under `cmd/`, adjust those tasks and the release packaging logic at the same time.
 

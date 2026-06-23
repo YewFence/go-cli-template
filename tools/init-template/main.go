@@ -70,15 +70,10 @@ func run() error {
 		return err
 	}
 
-	if _, err := os.Stat("README.template.md"); err == nil {
-		if err := os.Remove("README.md"); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-		if err := os.Rename("README.template.md", "README.md"); err != nil {
-			return err
-		}
-	} else if errors.Is(err, os.ErrNotExist) {
-	} else {
+	if err := replaceWithTemplate("README.md", "README.template.md"); err != nil {
+		return err
+	}
+	if err := replaceWithTemplate("AGENTS.md", "AGENTS.template.md"); err != nil {
 		return err
 	}
 
@@ -88,8 +83,10 @@ func run() error {
 		}
 	}
 
-	_, err := fmt.Fprintln(os.Stdout, "Third-party library versions may be outdated. Run mise run update to update Go dependencies and tidy modules.")
-	_, err = fmt.Fprintln(os.Stdout, "If you no longer need the template initialization tool, delete `tools/init-template` and remove the `[tasks.init]` configuration from `mise.toml`.")
+	if _, err := fmt.Fprintln(os.Stdout, "Third-party library versions may be outdated. Run mise run update to update Go dependencies and tidy modules."); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintln(os.Stdout, "If you no longer need the template initialization tool, delete `tools/init-template` and remove the `[tasks.init]` configuration from `mise.toml`.")
 	return err
 }
 
@@ -345,6 +342,19 @@ func renameCLIEntrypoint(name string) error {
 		return err
 	}
 	return os.Rename(templateEntrypoint, targetEntrypoint)
+}
+
+func replaceWithTemplate(targetPath string, templatePath string) error {
+	if _, err := os.Stat(templatePath); err == nil {
+		if err := os.Remove(targetPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+		return os.Rename(templatePath, targetPath)
+	} else if errors.Is(err, os.ErrNotExist) {
+		return nil
+	} else {
+		return err
+	}
 }
 
 type replacement struct {

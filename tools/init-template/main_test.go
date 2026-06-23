@@ -293,6 +293,75 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	}
 }
 
+func TestRunReplacesAgentsWithAgentsTemplate(t *testing.T) {
+	directory := t.TempDir()
+	t.Chdir(directory)
+
+	if err := os.WriteFile("README.md", []byte("# Template repository README\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("README.template.md", []byte("# {{PROJECT_NAME}}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("AGENTS.md", []byte("Template repository agent instructions\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	agentsTemplate := strings.Join([]string{
+		"After changing Go code, run `mise run check` before finishing.",
+		"{{PROJECT_NAME}} is in early development.",
+	}, "\n")
+	if err := os.WriteFile("AGENTS.template.md", []byte(agentsTemplate), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll("cmd/your-cli", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("cmd/your-cli/main.go", []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	oldArgs := os.Args
+	oldCommandLine := flag.CommandLine
+	t.Cleanup(func() {
+		os.Args = oldArgs
+		flag.CommandLine = oldCommandLine
+	})
+	flag.CommandLine = flag.NewFlagSet("init-template", flag.ContinueOnError)
+	os.Args = []string{
+		"init-template",
+		"--module", "github.com/acme/widget-module",
+		"--name", "widget",
+		"--owner", "acme",
+		"--repo", "widget-repo",
+		"--description", "Manage widgets",
+	}
+
+	if err := run(); err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+
+	if _, err := os.Stat("AGENTS.template.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("AGENTS.template.md stat error = %v, want not exist", err)
+	}
+	output, err := os.ReadFile("AGENTS.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(output)
+	for _, want := range []string{
+		"After changing Go code, run `mise run check` before finishing.",
+		"widget is in early development.",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("AGENTS.md missing %q:\n%s", want, got)
+		}
+	}
+	if strings.Contains(got, "Template repository agent instructions") {
+		t.Fatalf("AGENTS.md still contains the template repository instructions:\n%s", got)
+	}
+}
+
 func requireGit(t *testing.T) {
 	t.Helper()
 	if _, err := exec.LookPath("git"); err != nil {

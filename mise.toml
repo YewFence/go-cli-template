@@ -55,12 +55,13 @@ raw = true
 run = "golangci-lint run"
 
 [tasks.check]
-description = "Run Go formatting checks, static checks, build, and lint"
+description = "Run Go formatting checks, static checks, build, lint and test"
 run = [
   { task = "fmt" },
   { task = "vet" },
   { task = "build" },
   { task = "lint" },
+  { task = "test" }
 ]
 
 [tasks.cli]
