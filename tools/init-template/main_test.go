@@ -266,8 +266,8 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	if _, err := os.Stat("README.template.md"); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("README.template.md stat error = %v, want not exist", err)
 	}
-	if _, err := os.Stat("renovate.json"); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("renovate.json stat error = %v, want not exist", err)
+	if _, err := os.Stat("renovate.json"); err != nil {
+		t.Fatalf("renovate.json stat error = %v", err)
 	}
 	if _, err := os.Stat("cmd/widget/main.go"); err != nil {
 		t.Fatalf("cmd/widget/main.go stat error = %v", err)

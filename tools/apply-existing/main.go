@@ -98,7 +98,7 @@ func gitOutput(args ...string) (string, error) {
 
 func confirmApply(input *os.File, output *os.File) error {
 	reader := bufio.NewReader(input)
-	message := "This will overwrite mise.toml, .gitignore, and .github/workflows, and download the template documentation site when docs does not exist. Type yes to continue: "
+	message := "This will overwrite mise.toml, renovate.json, .gitignore, and .github/workflows, and download the template documentation site when docs does not exist. Type yes to continue: "
 	if _, err := fmt.Fprint(output, message); err != nil {
 		return err
 	}
@@ -116,6 +116,7 @@ func confirmApply(input *os.File, output *os.File) error {
 func planTemplateFiles() ([]templateFile, error) {
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
+		{path: "renovate.json", overwrite: true},
 		{path: ".gitignore", overwrite: true},
 		{path: ".github/workflows/actions-up.yml", overwrite: true},
 		{path: ".github/workflows/ci.yml", overwrite: true},

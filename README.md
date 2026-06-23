@@ -1,6 +1,6 @@
 # Go CLI Template
 
-This is a ready-to-use Go CLI project template. It uses Cobra for command organization, mise for toolchain and task management, and includes a VitePress documentation site, GitHub Actions continuous integration, documentation publishing, GitHub Actions update checks, and automated releases.
+This is a ready-to-use Go CLI project template. It uses Cobra for command organization, mise for toolchain and task management, and includes a VitePress documentation site, GitHub Actions continuous integration, documentation publishing, GitHub Actions update checks, Renovate dependency updates, and automated releases.
 
 ## Requirements
 
@@ -20,6 +20,7 @@ This template commits [mise.lock](mise.lock) to pin the resolved tools declared 
 | Agent instructions | `AGENTS.template.md` becomes `AGENTS.md` after initialization. It tells future development agents to run `mise run check` after Go code changes and notes that the generated project is still early enough to avoid backward-compatibility constraints |
 | Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
 | CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |
+| Dependency updates | `renovate.json` configures Renovate for GitHub Actions, npm, Go modules, and mise tool updates. Connect the official [Renovate GitHub App](https://github.com/apps/renovate) to enable pull requests |
 | Release workflow | Pushing to `main` creates semantic releases from Conventional Commits. Manual tags and pushed `v*` tags are also supported |
 
 ## Quick Start
@@ -46,6 +47,8 @@ mise run init
 This task asks for the Go module path, command name, GitHub owner or organization, repository name, and project description. It then replaces the template content, removes the template repository origin, and reinitializes the Git history in the current directory so the cloned project starts from a clean `main` branch.
 
 Initialization also replaces this repository's `AGENTS.md` with the generated project's `AGENTS.template.md`. The preset agent prompt assumes early-stage development, requires `mise run check` after Go changes, and can be adjusted once your project moves into stable maintenance.
+
+The generated project keeps `renovate.json`. To enable dependency update pull requests, install and configure the official [Renovate GitHub App](https://github.com/apps/renovate) for the generated repository.
 
 The generated project is intentionally shaped as a single-command CLI. The executable entrypoint lives under `cmd/<command-name>`, and the mise build, run, install, and release tasks use `./cmd/...` so Go derives the binary name from that entrypoint directory. If you add more executable entrypoints under `cmd/`, adjust those tasks and the release packaging logic at the same time.
 
@@ -81,9 +84,9 @@ Then remove the `[tasks.init]` section from `mise.toml`.
 
 ## Apply To An Existing Project
 
-If you already have a Go project and only want to reuse this template's project configuration, run the existing-project apply tool. It does not modify application code, `go.mod`, README, Git origin, or Git history. It only overwrites `mise.toml`, `.gitignore`, and `.github/workflows`, and downloads the template documentation site only when the current project does not already have a `docs` directory.
+If you already have a Go project and only want to reuse this template's project configuration, run the existing-project apply tool. It does not modify application code, `go.mod`, README, Git origin, or Git history. It only overwrites `mise.toml`, `renovate.json`, `.gitignore`, and `.github/workflows`, and downloads the template documentation site only when the current project does not already have a `docs` directory.
 
-Before running it, make sure the Git working tree is clean. The tool also asks you to type `yes` before continuing. After it finishes, use `git diff` to review the changes and keep or adjust them as needed.
+Before running it, make sure the Git working tree is clean. The tool also asks you to type `yes` before continuing. After it finishes, use `git diff` to review the changes and keep or adjust them as needed. To enable dependency update pull requests, install and configure the official [Renovate GitHub App](https://github.com/apps/renovate) for the repository.
 
 ```bash
 go run github.com/YewFence/go-cli-template/tools/apply-existing@latest

@@ -45,6 +45,9 @@ func TestPlanTemplateFilesIncludesDocsWhenDocsMissing(t *testing.T) {
 	if !hasTemplatePath(files, ".gitignore") {
 		t.Fatalf("planTemplateFiles() missing .gitignore")
 	}
+	if !hasTemplatePath(files, "renovate.json") {
+		t.Fatalf("planTemplateFiles() missing renovate.json")
+	}
 }
 
 func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
@@ -61,6 +64,7 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 		return &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
 			bodyByPath := map[string]string{
 				"/templates/test-ref/mise.toml":     "new mise\n",
+				"/templates/test-ref/renovate.json": "{}\n",
 				"/templates/test-ref/.gitignore":    "bin/\ndist/\n",
 				"/templates/test-ref/docs/index.md": "# docs\n",
 			}
@@ -92,6 +96,7 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
+		{path: "renovate.json", overwrite: true},
 		{path: ".gitignore", overwrite: true},
 		{path: "docs/index.md"},
 	}
@@ -101,6 +106,7 @@ func TestApplyTemplateFilesOverwritesConfigAndCreatesMissingDocs(t *testing.T) {
 	}
 
 	assertFileContent(t, "mise.toml", "new mise\n")
+	assertFileContent(t, "renovate.json", "{}\n")
 	assertFileContent(t, ".gitignore", "bin/\ndist/\n")
 	assertFileContent(t, "docs/index.md", "# docs\n")
 }
