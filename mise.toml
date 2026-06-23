@@ -3,7 +3,7 @@ lockfile = true
 
 [tools]
 # https://go.dev/
-go = "1"
+go = "1.26.4"
 # https://nodejs.org/
 node = "26"
 # https://github.com/azat-io/actions-up
