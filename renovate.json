@@ -7,40 +7,21 @@
   ],
   "timezone": "Asia/Shanghai",
   "dependencyDashboard": true,
-  "enabledManagers": [
-    "github-actions",
-    "npm",
-    "gomod",
-    "mise"
-  ],
-  "schedule": [
-    "before 9am on monday"
-  ],
-  "minimumReleaseAge": "3 days",
-  "internalChecksAsSuccess": true,
-  "prHourlyLimit": 2,
-  "prConcurrentLimit": 5,
+  "enabledManagers": ["github-actions", "npm", "gomod", "mise"],
   "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": [
-      "before 9am on monday"
-    ]
+    "enabled": true
   },
   "packageRules": [
     {
       "description": "Group GitHub Actions updates.",
-      "matchManagers": [
-        "github-actions"
-      ],
+      "matchManagers": ["github-actions"],
       "groupName": "GitHub Actions",
       "semanticCommitType": "ci",
       "commitMessageTopic": "GitHub Actions"
     },
     {
       "description": "Keep npm ranges and pnpm lockfiles current.",
-      "matchManagers": [
-        "npm"
-      ],
+      "matchManagers": ["npm"],
       "groupName": "npm dependencies",
       "rangeStrategy": "bump",
       "semanticCommitType": "chore",
@@ -48,68 +29,31 @@
     },
     {
       "description": "Tidy Go modules after dependency updates.",
-      "matchManagers": [
-        "gomod"
-      ],
+      "matchManagers": ["gomod"],
       "groupName": "Go modules",
-      "postUpdateOptions": [
-        "gomodTidy"
-      ],
+      "postUpdateOptions": ["gomodTidy"],
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps"
     },
     {
       "description": "Allow Renovate to bump the Go directive.",
-      "matchManagers": [
-        "gomod"
-      ],
-      "matchDepNames": [
-        "go"
-      ],
-      "matchDepTypes": [
-        "golang"
-      ],
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
       "rangeStrategy": "bump",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps"
     },
     {
       "description": "Group mise tool updates.",
-      "matchManagers": [
-        "mise"
-      ],
+      "matchManagers": ["mise"],
       "groupName": "mise tools",
       "semanticCommitType": "chore",
       "semanticCommitScope": "deps"
     },
     {
-      "description": "Keep pnpm on v10 until v11 compatibility is acceptable.",
-      "matchManagers": [
-        "mise",
-        "npm"
-      ],
-      "matchPackageNames": [
-        "pnpm"
-      ],
-      "allowedVersions": "<11"
-    },
-    {
-      "description": "Automerge low-risk dependency updates.",
-      "matchUpdateTypes": [
-        "minor",
-        "patch",
-        "pin",
-        "digest",
-        "lockFileMaintenance"
-      ],
-      "automerge": true,
-      "automergeType": "branch"
-    },
-    {
       "description": "Gate major updates through the dependency dashboard.",
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
     }
   ]
