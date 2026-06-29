@@ -141,7 +141,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           install_args: go
           add_shims_to_path: true
-          cache_key: "mise-v1-{{platform}}-{{install_args_hash}}-{{file_hash}}"
+          cache_key: "mise-release-{{install_args_hash}}-{{file_hash}}"
 
       - uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:

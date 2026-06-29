@@ -16,3 +16,18 @@ run = "go mod tidy && git diff --exit-code go.mod go.sum"
 [tasks.'lint:newline:check']
 description = "Check Newline Lint issues"
 run = "git ls-files | xargs nllint --trim-space"
+
+[tasks.'fmt:check']
+description = "Check Go code formatting"
+depends = [ "fmt" ]
+run = "git diff --exit-code"
+
+[tasks.'action:check']
+# Need github token to avoid rate limit
+description = "Check for action pinned version"
+run = "pinact run --check"
+
+[tasks.'action:outdated']
+# Need github token to avoid rate limit
+description = "Check for outdated action versions"
+run = "pinact run --update && git diff --exit-code .github/workflows"
