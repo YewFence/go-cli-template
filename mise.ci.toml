@@ -1,5 +1,4 @@
 [tools]
-go = "1"
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
 
 [tasks.govulncheck]
@@ -9,3 +8,11 @@ run = "govulncheck ./..."
 [tasks.'mod:verify']
 description = "Verify Go module dependencies"
 run = "go mod verify"
+
+[tasks.'tidy:check']
+description = "Check whether Go module dependencies are tidy"
+run = "go mod tidy && git diff --exit-code go.mod go.sum"
+
+[tasks.'lint:newline:check']
+description = "Check Newline Lint issues"
+run = "git ls-files | xargs nllint --trim-space"

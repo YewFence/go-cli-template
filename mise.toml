@@ -6,14 +6,20 @@ lockfile = true
 go = "1"
 # https://nodejs.org/
 node = "26"
-# https://github.com/azat-io/actions-up
-"npm:actions-up" = "1"
 # https://github.com/paulhatch/semantic-version
-"npm:@semanticversion/cli" = "latest"
+"npm:@semanticversion/cli" = "6"
 # https://pnpm.io/
 pnpm = "11"
 # https://golangci-lint.run/
 golangci-lint = "2"
+# https://github.com/suzuki-shunsuke/nllint
+"go:github.com/suzuki-shunsuke/nllint/cmd/nllint" = "1"
+# https://github.com/suzuki-shunsuke/pinact
+pinact = "4"
+
+[env]
+# the minimum release age of github actions in days
+PINACT_MIN_AGE = "3"
 
 [tasks.init]
 description = "Initialize project name, module path, and repository information from the template"
@@ -22,10 +28,6 @@ run = "GO111MODULE=off go run ./tools/init-template/main.go --fresh-git"
 [tasks.tidy]
 description = "Tidy Go module dependencies"
 run = "go mod tidy"
-
-[tasks.'tidy:check']
-description = "Check whether Go module dependencies are tidy"
-run = "go mod tidy && git diff --exit-code go.mod go.sum"
 
 [tasks.update]
 description = "Update Go dependencies and tidy modules"
@@ -50,14 +52,19 @@ description = "Run Go lint checks"
 raw = true
 run = "golangci-lint run"
 
+[tasks."lint:newline"]
+description = "Run Newline Lint and fix issues"
+run = "git ls-files | xargs nllint --fix --trim-space"
+
 [tasks.check]
 description = "Run Go formatting checks, static checks, build, lint and test"
+depends = [ "fmt" ]
 run = [
-  { task = "fmt" },
   { task = "vet" },
   { task = "build" },
   { task = "lint" },
-  { task = "test" }
+  { task = "test" },
+  { task = "lint:newline" }
 ]
 
 [tasks.cli]
@@ -73,8 +80,9 @@ description = "Build the CLI executable"
 run = 'go build -trimpath -ldflags="-s -w -X main.version=${BUILD_VERSION:-dev}" -o "${BUILD_OUTPUT_DIR:-bin}/" ./cmd/...'
 
 [tasks.'action:update']
-description = "Interactively update GitHub Action versions and pin to commit hashes by default"
-run = "actions-up"
+description = "Update GitHub Action versions and pin to commit hashest"
+env = { PINACT_GITHUB_TOKEN = "${MISE_GITHUB_TOKEN:-}" }
+run = "pinact run --update"
 
 [tasks.'docs:install']
 description = "Install documentation site dependencies"

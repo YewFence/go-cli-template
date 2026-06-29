@@ -47,6 +47,9 @@ jobs:
       - name: Build
         run: mise run build
 
+      - name: New Line Lint Check
+        run: mise run lint:newline:check
+
   audit:
     name: Audit
     runs-on: ubuntu-latest
