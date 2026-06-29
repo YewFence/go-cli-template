@@ -16,6 +16,8 @@ golangci-lint = "2"
 "go:github.com/suzuki-shunsuke/nllint/cmd/nllint" = "1"
 # https://github.com/suzuki-shunsuke/pinact
 pinact = "4"
+# https://github.com/crate-ci/typos
+typos = "1"
 
 [env]
 # the minimum release age of github actions in days
@@ -42,29 +44,36 @@ description = "Check Go code formatting"
 raw = true
 run = "golangci-lint fmt -E gofmt --diff"
 
-[tasks.vet]
-description = "Run Go static checks"
-raw = true
-run = "go vet ./..."
-
 [tasks.lint]
 description = "Run Go lint checks"
 raw = true
-run = "golangci-lint run"
+run = "golangci-lint run -E asciicheck"
+
+[tasks."lint:typos"]
+description = "Run Typos Lint"
+run = "typos"
+
+[tasks."lint:typos-fix"]
+description = "Fix Typos Lint"
+run = "typos --write-changes"
 
 [tasks."lint:newline"]
 description = "Run Newline Lint and fix issues"
 run = "git ls-files | xargs nllint --fix --trim-space"
 
 [tasks.check]
-description = "Run Go formatting checks, static checks, build, lint and test"
-depends = [ "fmt" ]
+description = """
+Run Newline Check, typos check
+auto tidy go mod
+go formatting checks and static checks via golang-lint
+go build and test"""
+depends = [ "fmt", "tidy"]
 run = [
-  { task = "vet" },
-  { task = "build" },
+  { task = "lint:newline" },
+  { task = "lint:typos"},
   { task = "lint" },
+  { task = "build" },
   { task = "test" },
-  { task = "lint:newline" }
 ]
 
 [tasks.cli]

@@ -38,17 +38,8 @@ jobs:
       - name: Check go.mod tidy
         run: mise run tidy:check
 
-      - name: Vet
-        run: mise run vet
-
-      - name: Test
-        run: mise run test
-
-      - name: Build
-        run: mise run build
-
-      - name: New Line Lint Check
-        run: mise run lint:newline:check
+      - name: Check
+        run: mise run check
 
   audit:
     name: Audit
