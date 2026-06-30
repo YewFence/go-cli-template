@@ -48,24 +48,21 @@ description = "Generate release notes for RELEASE_TAG, or for the next release t
 run = """
 tag="$(mise run release:tag)"
 
+cliff_mode="--unreleased"
+if git tag --points-at HEAD | grep -Fxq "${tag}"; then
+  cliff_mode="--current"
+fi
+
 output="${RELEASE_NOTES_OUTPUT:-}"
 if [[ -n "${output}" ]]; then
   mkdir -p "$(dirname "${output}")"
-  if git tag --points-at HEAD | grep -Fxq "${tag}"; then
-    git cliff --current --tag "${tag}" --strip all > "${output}"
-  else
-    git cliff --unreleased --tag "${tag}" --strip all > "${output}"
-  fi
+  git cliff "${cliff_mode}" --tag "${tag}" --strip all > "${output}"
 
   if [[ ! -s "${output}" ]]; then
     echo "Release ${tag}" > "${output}"
   fi
 else
-  if git tag --points-at HEAD | grep -Fxq "${tag}"; then
-    git cliff --current --tag "${tag}" --strip all
-  else
-    git cliff --unreleased --tag "${tag}" --strip all
-  fi
+  git cliff "${cliff_mode}" --tag "${tag}" --strip all
 fi
 """
 
@@ -86,7 +83,6 @@ description = "Create the release tag for RELEASE_TAG, or for the next release t
 run = """
 tag="$(mise run release:tag)"
 
-git fetch --tags --force
 if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
   existing_commit="$(git rev-list -n 1 "${tag}")"
   current_commit="$(git rev-parse HEAD)"
