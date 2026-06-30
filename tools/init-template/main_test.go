@@ -217,6 +217,51 @@ func TestRenameCLIEntrypoint(t *testing.T) {
 	}
 }
 
+func TestRemoveTOMLTable(t *testing.T) {
+	directory := t.TempDir()
+	path := filepath.Join(directory, "mise.toml")
+	content := strings.Join([]string{
+		"[settings]",
+		"lockfile = true",
+		"",
+		"[tasks.init]",
+		"description = \"Initialize project\"",
+		"run = \"go run ./tools/init-template/main.go\"",
+		"",
+		"[tasks.test]",
+		"description = \"Run tests\"",
+		"run = \"go test ./...\"",
+		"",
+	}, "\n")
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := removeTOMLTable(path, "tasks.init"); err != nil {
+		t.Fatalf("removeTOMLTable() error = %v", err)
+	}
+	output, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := string(output)
+	if strings.Contains(got, "[tasks.init]") {
+		t.Fatalf("mise.toml still contains tasks.init:\n%s", got)
+	}
+	for _, want := range []string{
+		"[settings]",
+		"lockfile = true",
+		"[tasks.test]",
+		"description = \"Run tests\"",
+		"run = \"go test ./...\"",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("mise.toml missing %q:\n%s", want, got)
+		}
+	}
+}
+
 func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	directory := t.TempDir()
 	t.Chdir(directory)
@@ -234,6 +279,19 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile("renovate.json", []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	miseTOML := strings.Join([]string{
+		"[tasks.init]",
+		"description = \"Initialize project\"",
+		"run = \"go run ./tools/init-template/main.go\"",
+		"",
+		"[tasks.test]",
+		"description = \"Run tests\"",
+		"run = \"go test ./...\"",
+		"",
+	}, "\n")
+	if err := os.WriteFile("mise.toml", []byte(miseTOML), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll("cmd/your-cli", 0o755); err != nil {
@@ -268,6 +326,16 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	}
 	if _, err := os.Stat("renovate.json"); err != nil {
 		t.Fatalf("renovate.json stat error = %v", err)
+	}
+	miseOutput, err := os.ReadFile("mise.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(miseOutput), "[tasks.init]") {
+		t.Fatalf("mise.toml still contains tasks.init:\n%s", string(miseOutput))
+	}
+	if !strings.Contains(string(miseOutput), "[tasks.test]") {
+		t.Fatalf("mise.toml missing tasks.test:\n%s", string(miseOutput))
 	}
 	if _, err := os.Stat("cmd/widget/main.go"); err != nil {
 		t.Fatalf("cmd/widget/main.go stat error = %v", err)

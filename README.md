@@ -74,13 +74,11 @@ Initialization replaces these template defaults.
 
 4. Clean up template-only files.
 
-After initialization is complete and the replacement result looks correct, remove the template-only initialization tool.
+After initialization is complete and the replacement result looks correct, remove the template-only initialization tool. The initialization task removes its own `mise.toml` task entry automatically.
 
 ```bash
 rm -rf tools/init-template
 ```
-
-Then remove the `[tasks.init]` section from `mise.toml`.
 
 ## Apply To An Existing Project
 

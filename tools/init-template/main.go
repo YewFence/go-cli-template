@@ -72,6 +72,9 @@ func run() error {
 	if err := replaceWithTemplate("AGENTS.md", "AGENTS.template.md"); err != nil {
 		return err
 	}
+	if err := removeMiseInitTask(); err != nil {
+		return err
+	}
 
 	if config.freshGit {
 		if err := resetGitHistory(); err != nil {
@@ -82,7 +85,7 @@ func run() error {
 	if _, err := fmt.Fprintln(os.Stdout, "Third-party library versions may be outdated. Run mise run deps:update to update Go dependencies and tidy modules."); err != nil {
 		return err
 	}
-	_, err := fmt.Fprintln(os.Stdout, "If you no longer need the template initialization tool, delete `tools/init-template` and remove the `[tasks.init]` configuration from `mise.toml`.")
+	_, err := fmt.Fprintln(os.Stdout, "If you no longer need the template initialization tool, delete `tools/init-template`.")
 	return err
 }
 
@@ -351,6 +354,56 @@ func replaceWithTemplate(targetPath string, templatePath string) error {
 	} else {
 		return err
 	}
+}
+
+func removeMiseInitTask() error {
+	return removeTOMLTable("mise.toml", "tasks.init")
+}
+
+func removeTOMLTable(path string, table string) error {
+	content, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	lines := strings.SplitAfter(string(content), "\n")
+	targetHeader := "[" + table + "]"
+	updated := make([]string, 0, len(lines))
+	removing := false
+	removed := false
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if !removing && trimmedLine == targetHeader {
+			removing = true
+			removed = true
+			continue
+		}
+		if removing {
+			if isTOMLTableHeader(trimmedLine) {
+				removing = false
+			} else {
+				continue
+			}
+		}
+		updated = append(updated, line)
+	}
+	if !removed {
+		return nil
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, []byte(strings.Join(updated, "")), info.Mode())
+}
+
+func isTOMLTableHeader(line string) bool {
+	return strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]")
 }
 
 type replacement struct {
