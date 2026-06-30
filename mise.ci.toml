@@ -9,7 +9,7 @@ run = "govulncheck ./..."
 description = "Verify Go module dependencies"
 run = "go mod verify"
 
-[tasks.'actions:check']
+[tasks.'actions:pin:check']
 # Need github token to avoid rate limit
 description = "Check for action pinned version"
 run = "pinact run --check"

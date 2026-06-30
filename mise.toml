@@ -18,6 +18,8 @@ golangci-lint = "2"
 pinact = "4"
 # https://github.com/crate-ci/typos
 typos = "1"
+betterleaks = "1"
+actionlint = "1"
 
 [env]
 # the minimum release age of github actions in days
@@ -59,6 +61,10 @@ description = "Run Go lint checks"
 raw = true
 run = "golangci-lint run -E asciicheck"
 
+[tasks."leaks:check"]
+description = "Run betterleaks checks"
+run = "betterleaks git --redact --no-banner"
+
 [tasks."typos:check"]
 description = "Run Typos Lint"
 run = "typos"
@@ -79,11 +85,12 @@ run = "git ls-files | xargs nllint --trim-space"
 description = """
 Run read-only checks for Go modules, newlines, typos, formatting, GitHub Actions, lint, build, and tests"""
 run = [
+  { task = "leaks:check" },
   { task = "mod:tidy:check" },
   { task = "newline:check" },
   { task = "typos:check" },
   { task = "fmt:check" },
-  { task = "actions:check:offline" },
+  { task = "actions:check" },
   { task = "lint" },
   { task = "build:check" },
   { task = "test" }
@@ -114,11 +121,16 @@ run = 'go build -trimpath -ldflags="-s -w -X main.version=${BUILD_VERSION:-dev}"
 description = "Check whether the CLI builds"
 run = "go test -run '^$' ./cmd/..."
 
+[tasks."actions:check"]
+description = "Run actionlint"
+depends = ["actions:pin-offline:check"]
+run = "actionlint"
+
 [tasks.'actions:update']
 description = "Update GitHub Action versions and pin to commit hashes"
 run = "pinact run --update"
 
-[tasks.'actions:check:offline']
+[tasks.'actions:pin-offline:check']
 description = "Check GitHub Action versions and pin to commit hashes"
 run = "unset PINACT_MIN_AGE && pinact run --fix=false --no-api"
 

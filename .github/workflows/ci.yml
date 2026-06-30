@@ -95,7 +95,7 @@ jobs:
       - name: Check Action pinned versions
         env:
           PINACT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mise run actions:check
+        run: mise run actions:pin:check
 
       - name: Check whether Action is outdated
         env:
