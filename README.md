@@ -21,7 +21,7 @@ This template commits [mise.lock](mise.lock) to pin the resolved tools declared 
 | Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
 | CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |
 | Dependency updates | `renovate.json` configures Renovate for GitHub Actions, npm, Go modules, and mise tool updates. Connect the official [Renovate GitHub App](https://github.com/apps/renovate) to enable pull requests |
-| Release workflow | Pushing to `main` creates semantic releases from Conventional Commits. Manual tags and pushed `v*` tags are also supported |
+| Release workflow | `git-cliff` prepares release pull requests from `main` updates, while pushed `v*` tags and merged `release` pull requests publish GitHub Releases |
 
 ## Quick Start
 
@@ -79,6 +79,16 @@ After initialization is complete and the replacement result looks correct, remov
 ```bash
 rm -rf tools/init-template
 ```
+
+## Release Workflow
+
+This template uses `git-cliff` as the release version and changelog engine, and keeps the platform-specific automation directly in GitHub Actions workflow files.
+
+When commits land on `main`, `.github/workflows/prepare-release.yml` calculates the next semantic version with `git cliff --bumped-version`, updates `CHANGELOG.md` with unreleased changes for that tag, pushes a fixed `release` branch, and creates or updates a pull request back to `main`. The fixed branch name keeps the release path easy to recognize, and the generated pull request makes the changelog reviewable before anything is published.
+
+`.github/workflows/release.yml` is the only workflow that publishes releases. It runs when a local `v*` tag is pushed, so manual tag-driven releases stay supported, and it also runs when the `release` pull request is merged into `main`. In the merged release pull request path, the workflow recalculates the same `git-cliff` version, creates the tag in that same run, builds release artifacts, generates release notes with `git-cliff`, and publishes the GitHub Release. Creating the tag and publishing in one workflow avoids relying on a `GITHUB_TOKEN` tag push to trigger another workflow.
+
+The release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as `release-please`. The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later, where only the pull request and release publishing commands should need to change.
 
 ## Apply To An Existing Project
 

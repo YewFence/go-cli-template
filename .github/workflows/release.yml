@@ -2,10 +2,15 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*"
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+    paths:
+      - CHANGELOG.md
   workflow_dispatch:
     inputs:
       tag:
@@ -25,12 +30,24 @@ jobs:
   version:
     name: Resolve Version
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.merged == true &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.head.ref == 'release'
+      )
     outputs:
       tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
       checkout_ref: ${{ steps.release.outputs.checkout_ref }}
       should_release: ${{ steps.release.outputs.should_release }}
       create_tag: ${{ steps.release.outputs.create_tag }}
+    env:
+      MISE_TASK_RUN_AUTO_INSTALL: "false"
+      MISE_LOCKED: "1"
     steps:
       - name: Ensure tag input
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag == '' }}
@@ -41,63 +58,50 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.event.pull_request.merge_commit_sha || inputs.tag || github.ref }}
           fetch-depth: 0
           filter: blob:none
 
-      - name: Compute semantic version
-        id: semantic
-        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/') }}
-        uses: PaulHatch/semantic-version@9f72830310d5ed81233b641ee59253644cd8a8fc # v6.0.2
+      - name: Setup mise
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
         with:
-          tag_prefix: "v"
-          ignore_commits_pattern: '/^(?!(fix|feat|perf)(\(.+\))?!?:|[a-z]+(\(.+\))?!:).*/'
-
-      - name: Resolve explicit tag
-        id: explicit
-        if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/') }}
-        env:
-          INPUT_TAG: ${{ inputs.tag }}
-          REF_NAME: ${{ github.ref_name }}
-        run: |
-          tag="${INPUT_TAG:-${REF_NAME}}"
-          if [[ -z "${tag}" ]]; then
-            echo "tag must not be empty"
-            exit 1
-          fi
-
-          {
-            echo "tag=${tag}"
-            echo "checkout_ref=${tag}"
-          } >> "${GITHUB_OUTPUT}"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          install_args: git-cliff
+          add_shims_to_path: true
+          cache_key: "mise-release-version-{{install_args_hash}}-{{file_hash}}"
 
       - name: Resolve release metadata
         id: release
         env:
-          EXPLICIT_TAG: ${{ steps.explicit.outputs.tag }}
-          EXPLICIT_CHECKOUT_REF: ${{ steps.explicit.outputs.checkout_ref }}
-          SEMANTIC_TAG: ${{ steps.semantic.outputs.version_tag }}
-          SEMANTIC_CHANGED: ${{ steps.semantic.outputs.changed }}
-          SEMANTIC_TYPE: ${{ steps.semantic.outputs.version_type }}
-          SEMANTIC_IS_TAGGED: ${{ steps.semantic.outputs.is_tagged }}
-          SEMANTIC_CURRENT_COMMIT: ${{ steps.semantic.outputs.current_commit }}
+          INPUT_TAG: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: |
           tag=""
           checkout_ref="${GITHUB_SHA}"
           should_release="false"
           create_tag="false"
 
-          if [[ -n "${EXPLICIT_TAG}" ]]; then
-            tag="${EXPLICIT_TAG}"
-            checkout_ref="${EXPLICIT_CHECKOUT_REF}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            tag="${INPUT_TAG}"
+            checkout_ref="${INPUT_TAG}"
             should_release="true"
-          elif [[ "${SEMANTIC_CHANGED}" == "true" && "${SEMANTIC_TYPE}" != "none" && "${SEMANTIC_IS_TAGGED}" != "true" && -n "${SEMANTIC_TAG}" ]]; then
-            tag="${SEMANTIC_TAG}"
-            checkout_ref="${SEMANTIC_CURRENT_COMMIT:-${GITHUB_SHA}}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            tag="${REF_NAME}"
+            checkout_ref="${REF_NAME}"
+            should_release="true"
+          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            version="$(git cliff --bumped-version)"
+            version="${version#v}"
+            if [[ -z "${version}" ]]; then
+              echo "git cliff did not resolve a version"
+              exit 1
+            fi
+
+            tag="v${version}"
+            checkout_ref="${MERGE_COMMIT_SHA:-${GITHUB_SHA}}"
             should_release="true"
             create_tag="true"
-          else
-            tag="${SEMANTIC_TAG}"
           fi
 
           {
@@ -196,6 +200,9 @@ jobs:
       - build
     if: ${{ needs.version.outputs.should_release == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      MISE_TASK_RUN_AUTO_INSTALL: "false"
+      MISE_LOCKED: "1"
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -203,7 +210,37 @@ jobs:
           ref: ${{ needs.version.outputs.checkout_ref }}
           fetch-depth: 0
 
-      - name: Create semantic tag
+      - name: Setup mise
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          install_args: git-cliff
+          add_shims_to_path: true
+          cache_key: "mise-release-notes-{{install_args_hash}}-{{file_hash}}"
+
+      - name: Generate release notes
+        id: notes
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+        run: |
+          notes_file="${RUNNER_TEMP}/release-notes.md"
+          git fetch --tags --force
+
+          if git tag --points-at HEAD | grep -Fxq "${RELEASE_TAG}"; then
+            git cliff --current --tag "${RELEASE_TAG}" --strip all > "${notes_file}"
+          else
+            git cliff --unreleased --tag "${RELEASE_TAG}" --strip all > "${notes_file}"
+          fi
+
+          if [[ ! -s "${notes_file}" ]]; then
+            echo "Release ${RELEASE_TAG}" > "${notes_file}"
+          fi
+
+          echo "path=${notes_file}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create release tag
         if: ${{ needs.version.outputs.create_tag == 'true' }}
         env:
           RELEASE_TAG: ${{ needs.version.outputs.tag }}
@@ -235,8 +272,8 @@ jobs:
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           tag_name: ${{ needs.version.outputs.tag }}
+          body_path: ${{ steps.notes.outputs.path }}
           files: dist/*
-          generate_release_notes: true
 
       - name: Move latest tag
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.overwrite_latest_tag }}

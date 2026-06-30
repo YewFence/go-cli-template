@@ -7,8 +7,6 @@ env_shell_expand = true
 go = "1"
 # https://nodejs.org/
 node = "26"
-# https://github.com/paulhatch/semantic-version
-"npm:@semanticversion/cli" = "6"
 # https://pnpm.io/
 pnpm = "11"
 # https://golangci-lint.run/
@@ -21,6 +19,7 @@ pinact = "4"
 typos = "1"
 betterleaks = "1"
 actionlint = "1"
+git-cliff = "latest"
 
 [env]
 # the minimum release age of github actions in days
