@@ -1,5 +1,6 @@
 [settings]
 lockfile = true
+env_shell_expand = true
 
 [tools]
 # https://go.dev/
