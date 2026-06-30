@@ -85,14 +85,10 @@ run = "git ls-files | xargs nllint --trim-space"
 description = """
 Run read-only checks for Go modules, newlines, typos, formatting, GitHub Actions, lint, build, and tests"""
 run = [
+  { tasks = [ "mod:tidy:check", "newline:check", "typos:check", "build:check" ] },
   { task = "leaks:check" },
-  { task = "mod:tidy:check" },
-  { task = "newline:check" },
-  { task = "typos:check" },
-  { task = "fmt:check" },
   { task = "actions:check" },
   { task = "lint" },
-  { task = "build:check" },
   { task = "test" }
 ]
 
