@@ -1,6 +1,7 @@
 [settings]
 lockfile = true
 env_shell_expand = true
+minimum_release_age = "3d"
 
 [tools]
 # https://go.dev/

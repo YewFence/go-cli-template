@@ -1,14 +1,14 @@
 # Go CLI Template
 
-This is a ready-to-use Go CLI project template. It uses Cobra for command organization, mise for toolchain and task management, and includes a VitePress documentation site, GitHub Actions continuous integration, documentation publishing, GitHub Actions update checks, Renovate dependency updates, and automated releases.
+This is a ready-to-use Go CLI project template. It uses [Cobra](https://github.com/spf13/cobra) for command organization, [mise](https://github.com/jdx/mise) for toolchain and task management, and includes a [VitePress documentation site](./docs), GitHub Actions [continuous integration](.github/workflows/ci.yml), [documentation publishing](.github/workflows/docs.yml), [Renovate dependency updates](./renovate.json), simple linting, and an [automated release workflow](#release-workflow).
 
 ## Requirements
 
 Install [mise](https://github.com/jdx/mise) first.
 
-Other development tools are declared in [mise.toml](mise.toml). Run `mise install` to install them into the current project environment. If you do not use mise, install the tools manually using the links and versions in `mise.toml`.
+Other development tools are declared in [mise.toml](mise.toml). Run `mise install` to install them.
 
-This template commits [mise.lock](mise.lock) to pin the resolved tools declared in `mise.toml`. `mise.toml` can declare major versions, minor versions, exact versions, or `latest` based on project needs. To update the toolchain, run `mise lock`, commit the refreshed lockfile, and the CI and Release workflows will install tools from the lockfile for reproducible builds.
+This template uses [mise.lock](mise.lock) to pin the exact versions of the tools declared in `mise.toml`.
 
 ## Included Tooling
 
@@ -16,12 +16,14 @@ This template commits [mise.lock](mise.lock) to pin the resolved tools declared 
 | --- | --- |
 | CLI framework | Cobra is wired in with a root command, a `version` subcommand, shell completion commands, and a `cmd/your-cli` executable entrypoint |
 | Toolchain | Go, Node, pnpm, actions-up, golangci-lint, and related tools are managed through `mise` |
-| Development tasks | Built-in mise tasks include `mod:tidy`, `deps:update`, `test`, `fmt:check`, `fmt:fix`, `lint`, `fix`, `check`, `build`, `build:check`, `cli`, and `cli:install` |
+| Development tasks | Reusable mise tasks include `deps:update`, `fix`, `check`, `build`, and `cli`; see [mise.toml](mise.toml) for the full list |
+| Useful default lint rules | Default checks include `go mod tidy` verification, golangci-lint, [newline lint](https://github.com/suzuki-shunsuke/nllint), and [spell checking](https://github.com/crate-ci/typos) |
 | Agent instructions | `AGENTS.template.md` becomes `AGENTS.md` after initialization. It tells future development agents to run `mise run check` after Go code changes and notes that the generated project is still early enough to avoid backward-compatibility constraints |
 | Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
-| CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |
+| CI checks | GitHub Actions run `mise run check`, audit dependencies, and build the documentation |
 | Dependency updates | `renovate.json` configures Renovate for GitHub Actions, npm, Go modules, and mise tool updates. Connect the official [Renovate GitHub App](https://github.com/apps/renovate) to enable pull requests |
 | Release workflow | `git-cliff` prepares release pull requests from `main` updates, while pushed `v*` tags and merged `release` pull requests publish GitHub Releases |
+| Security | [pinact](https://github.com/suzuki-shunsuke/pinact) pins GitHub Actions versions to commit hashes. A 3-day minimum release age is configured for [Renovate](./renovate.json#L10), [pinact](https://github.com/suzuki-shunsuke/pinact#minimum-release-age-cooldown--min-age--verify-min-age) through environment variables in [mise.toml](./mise.toml#L27), and [mise](./mise.toml#L4). CI runs [govulncheck](https://golang.org/x/vuln/cmd/govulncheck) to check for dependency vulnerabilities |
 
 ## Quick Start
 
@@ -80,18 +82,6 @@ After initialization is complete and the replacement result looks correct, remov
 rm -rf tools/init-template
 ```
 
-## Release Workflow
-
-This template uses `git-cliff` as the release version and changelog engine, and keeps the platform-specific automation directly in GitHub Actions workflow files.
-
-When commits land on `main`, `.github/workflows/prepare-release.yml` calculates the next semantic version with `git cliff --bumped-version`, updates `CHANGELOG.md` with unreleased changes for that tag, pushes a fixed `release` branch, and creates or updates a pull request back to `main`. The fixed branch name keeps the release path easy to recognize, and the generated pull request makes the changelog reviewable before anything is published.
-
-`.github/workflows/release.yml` is the only workflow that publishes releases. It runs when a local `v*` tag is pushed, so manual tag-driven releases stay supported, and it also runs when the `release` pull request is merged into `main`. In the merged release pull request path, the workflow recalculates the same `git-cliff` version, creates the tag in that same run, builds release artifacts, generates release notes with `git-cliff`, and publishes the GitHub Release. Creating the tag and publishing in one workflow avoids relying on a `GITHUB_TOKEN` tag push to trigger another workflow.
-
-The release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as `release-please`. The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later, where only the pull request and release publishing commands should need to change.
-
-The reusable release helpers live in `mise.ci.toml`. Run them with `MISE_ENV=ci`, for example `MISE_ENV=ci mise run release:version` to print the next version, `MISE_ENV=ci mise run release:tag` to print the next tag, `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:notes` to preview release notes, and `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:changelog` to update `CHANGELOG.md`.
-
 ## Apply To An Existing Project
 
 If you already have a Go project and only want to reuse this template's project configuration, run the existing-project apply tool. It does not modify application code, `go.mod`, README, Git origin, or Git history. It only overwrites `mise.toml`, `renovate.json`, `.gitignore`, and `.github/workflows`, and downloads the template documentation site only when the current project does not already have a `docs` directory.
@@ -117,9 +107,21 @@ curl -fsSL https://raw.githubusercontent.com/YewFence/go-cli-template/main/tools
 go run "$tmp/apply-existing.go"
 ```
 
-## Development
+## Release Workflow
 
-See [README.template.md](README.template.md) for details.
+This template uses `git-cliff` as the release version and changelog engine, and keeps the platform-specific automation directly in GitHub Actions workflow files.
+
+When commits land on `main`, [.github/workflows/prepare-release.yml](.github/workflows/prepare-release.yml) calculates the next semantic version with `git cliff --bumped-version`, updates `CHANGELOG.md` with unreleased changes for that tag, pushes a fixed `release` branch, and creates or updates a pull request back to `main`. The fixed branch name keeps the release path easy to recognize, and the generated pull request makes the changelog reviewable before anything is published.
+
+[.github/workflows/release.yml](.github/workflows/release.yml) is the only workflow that publishes releases. It runs when a local `v*` tag is pushed, so manual tag-driven releases stay supported, and it also runs when the `release` pull request is merged into `main`. In the merged release pull request path, the workflow recalculates the same `git-cliff` version, creates the tag in that same run, builds release artifacts, generates release notes with `git-cliff`, and publishes the GitHub Release. Creating the tag and publishing in one workflow avoids relying on a `GITHUB_TOKEN` tag push to trigger another workflow.
+
+The release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as `release-please`. The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later, where only the pull request and release publishing commands should need to change.
+
+The reusable release helpers live in `mise.ci.toml`. Run them with `MISE_ENV=ci`, for example `MISE_ENV=ci mise run release:version` to print the next version, `MISE_ENV=ci mise run release:tag` to print the next tag, `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:notes` to preview release notes, and `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:changelog` to update `CHANGELOG.md`.
+
+## Development From This Template
+
+See [README.template.md](README.template.md) and the [Development Guide](CONTRIBUTING.md) for details.
 
 ## License
 
