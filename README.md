@@ -90,6 +90,8 @@ When commits land on `main`, `.github/workflows/prepare-release.yml` calculates 
 
 The release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as `release-please`. The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later, where only the pull request and release publishing commands should need to change.
 
+The reusable release helpers live in `mise.ci.toml`. Run them with `MISE_ENV=ci`, for example `MISE_ENV=ci mise run release:version` to print the next version, `MISE_ENV=ci mise run release:tag` to print the next tag, `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:notes` to preview release notes, and `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:changelog` to update `CHANGELOG.md`.
+
 ## Apply To An Existing Project
 
 If you already have a Go project and only want to reuse this template's project configuration, run the existing-project apply tool. It does not modify application code, `go.mod`, README, Git origin, or Git history. It only overwrites `mise.toml`, `renovate.json`, `.gitignore`, and `.github/workflows`, and downloads the template documentation site only when the current project does not already have a `docs` directory.

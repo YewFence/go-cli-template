@@ -18,3 +18,84 @@ run = "pinact run --check"
 # Need github token to avoid rate limit
 description = "Check for outdated action versions"
 run = "pinact run --update --diff"
+
+[tasks.'release:version']
+description = "Print the next release version without the v prefix"
+run = """
+version="$(git cliff --bumped-version)"
+version="${version#v}"
+if [[ -z "${version}" ]]; then
+  echo "git cliff did not resolve a version"
+  exit 1
+fi
+
+printf '%s\\n' "${version}"
+"""
+
+[tasks.'release:tag']
+description = "Print the release tag, automatically generate if RELEASE_TAG is not set"
+run = """
+tag="${RELEASE_TAG:-}"
+if [[ -z "${tag}" ]]; then
+  version="$(mise run release:version)"
+  tag="v${version}"
+fi
+printf '%s\\n' "${tag}"
+"""
+
+[tasks.'release:notes']
+description = "Generate release notes for RELEASE_TAG, or for the next release tag"
+run = """
+tag="$(mise run release:tag)"
+
+output="${RELEASE_NOTES_OUTPUT:-}"
+if [[ -n "${output}" ]]; then
+  mkdir -p "$(dirname "${output}")"
+  if git tag --points-at HEAD | grep -Fxq "${tag}"; then
+    git cliff --current --tag "${tag}" --strip all > "${output}"
+  else
+    git cliff --unreleased --tag "${tag}" --strip all > "${output}"
+  fi
+
+  if [[ ! -s "${output}" ]]; then
+    echo "Release ${tag}" > "${output}"
+  fi
+else
+  if git tag --points-at HEAD | grep -Fxq "${tag}"; then
+    git cliff --current --tag "${tag}" --strip all
+  else
+    git cliff --unreleased --tag "${tag}" --strip all
+  fi
+fi
+"""
+
+[tasks.'release:changelog']
+description = "Update CHANGELOG.md for RELEASE_TAG, or for the next release tag"
+run = """
+tag="$(mise run release:tag)"
+
+if [[ -f CHANGELOG.md ]]; then
+  git cliff --unreleased --tag "${tag}" --prepend CHANGELOG.md
+else
+  git cliff --unreleased --tag "${tag}" --output CHANGELOG.md
+fi
+"""
+
+[tasks.'release:tag:create']
+description = "Create the release tag for RELEASE_TAG, or for the next release tag"
+run = """
+tag="$(mise run release:tag)"
+
+git fetch --tags --force
+if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+  existing_commit="$(git rev-list -n 1 "${tag}")"
+  current_commit="$(git rev-parse HEAD)"
+  if [[ "${existing_commit}" != "${current_commit}" ]]; then
+    echo "tag ${tag} already exists, but it does not point to the current commit"
+    exit 1
+  fi
+  echo "tag ${tag} already exists. Skipping tag creation"
+else
+  git tag -a "${tag}" -m "Release ${tag}"
+fi
+"""

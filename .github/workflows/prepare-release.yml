@@ -23,6 +23,7 @@ jobs:
     env:
       MISE_TASK_RUN_AUTO_INSTALL: "false"
       MISE_LOCKED: "1"
+      MISE_ENV: "ci"
       RELEASE_BRANCH: release
     steps:
       - name: Checkout code
@@ -46,19 +47,13 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          version="$(git cliff --bumped-version)"
-          version="${version#v}"
-          if [[ -z "${version}" ]]; then
-            echo "git cliff did not resolve a version"
-            exit 1
-          fi
-
-          tag="v${version}"
+          tag="$(mise run release:tag)"
+          version="${tag#v}"
           notes_file="${RUNNER_TEMP}/release-notes.md"
-          git cliff --unreleased --tag "${tag}" --strip all > "${notes_file}"
+          RELEASE_TAG="${tag}" RELEASE_NOTES_OUTPUT="${notes_file}" mise run release:notes
 
           should_prepare="true"
-          if ! grep -q '^- ' "${notes_file}"; then
+          if ! grep -Eq '^[[:space:]]*[*-] ' "${notes_file}"; then
             should_prepare="false"
           fi
 
@@ -79,12 +74,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
-        run: |
-          if [[ -f CHANGELOG.md ]]; then
-            git cliff --unreleased --tag "${RELEASE_TAG}" --prepend CHANGELOG.md
-          else
-            git cliff --unreleased --tag "${RELEASE_TAG}" --output CHANGELOG.md
-          fi
+        run: mise run release:changelog
 
       - name: Push release branch
         id: branch
