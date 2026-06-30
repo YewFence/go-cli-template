@@ -80,7 +80,9 @@ mise run cli
 # Install the CLI into your local Go bin directory
 mise run cli:install
 # Tidy Go module dependencies
-mise run tidy
+mise run mod:tidy
+# Fix formatting, newlines, typos, and Go module metadata
+mise run fix
 # Run formatting checks, static checks, build, and lint
 mise run check
 # Build a local executable. Build artifacts are written to the `bin/` directory.
@@ -103,7 +105,7 @@ GitHub Actions are automatically updated by [this workflow](.github/workflows/ac
 > Pull requests opened from other repositories only check Action versions and do not update them automatically.
 
 ```bash
-mise run action:update
+mise run actions:update
 ```
 
 #### Release

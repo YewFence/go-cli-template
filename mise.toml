@@ -28,11 +28,15 @@ PINACT_GITHUB_TOKEN = { value = "${MISE_GITHUB_TOKEN:-}", redact = true }
 description = "Initialize project name, module path, and repository information from the template"
 run = "GO111MODULE=off go run ./tools/init-template/main.go --fresh-git"
 
-[tasks.tidy]
+[tasks."mod:tidy"]
 description = "Tidy Go module dependencies"
 run = "go mod tidy"
 
-[tasks.update]
+[tasks."mod:tidy:check"]
+description = "Check whether Go module dependencies are tidy"
+run = "go mod tidy -diff"
+
+[tasks."deps:update"]
 description = "Update Go dependencies and tidy modules"
 run = "go get -u ./... && go mod tidy"
 
@@ -40,42 +44,58 @@ run = "go get -u ./... && go mod tidy"
 description = "Run Go tests"
 run = "go test -v ./..."
 
-[tasks.fmt]
+[tasks."fmt:check"]
 description = "Check Go code formatting"
 raw = true
 run = "golangci-lint fmt -E gofmt --diff"
+
+[tasks."fmt:fix"]
+description = "Fix Go code formatting"
+raw = true
+run = "golangci-lint fmt -E gofmt"
 
 [tasks.lint]
 description = "Run Go lint checks"
 raw = true
 run = "golangci-lint run -E asciicheck"
 
-[tasks."lint:typos"]
+[tasks."typos:check"]
 description = "Run Typos Lint"
 run = "typos"
 
-[tasks."lint:typos-fix"]
+[tasks."typos:fix"]
 description = "Fix Typos Lint"
 run = "typos --write-changes"
 
-[tasks."lint:newline"]
-description = "Run Newline Lint and fix issues"
+[tasks."newline:fix"]
+description = "Fix Newline Lint issues"
 run = "git ls-files | xargs nllint --fix --trim-space"
+
+[tasks."newline:check"]
+description = "Check Newline Lint issues"
+run = "git ls-files | xargs nllint --trim-space"
 
 [tasks.check]
 description = """
-Run Newline Check, typos check
-auto tidy go mod
-go formatting checks and static checks via golang-lint
-go build and test"""
-depends = [ "fmt", "tidy"]
+Run read-only checks for Go modules, newlines, typos, formatting, GitHub Actions, lint, build, and tests"""
 run = [
-  { task = "lint:newline" },
-  { task = "lint:typos"},
-  { task = "action:check-offline"},
+  { task = "mod:tidy:check" },
+  { task = "newline:check" },
+  { task = "typos:check" },
+  { task = "fmt:check" },
+  { task = "actions:check:offline" },
   { task = "lint" },
-  { task = "build" },
+  { task = "build:check" },
   { task = "test" }
+]
+
+[tasks.fix]
+description = "Fix Go modules, newlines, typos, and formatting"
+run = [
+  { task = "mod:tidy" },
+  { task = "newline:fix" },
+  { task = "typos:fix" },
+  { task = "fmt:fix" }
 ]
 
 [tasks.cli]
@@ -90,11 +110,15 @@ run = 'go install -trimpath -ldflags="-X main.version=${BUILD_VERSION:-dev}" ./c
 description = "Build the CLI executable"
 run = 'go build -trimpath -ldflags="-s -w -X main.version=${BUILD_VERSION:-dev}" -o "${BUILD_OUTPUT_DIR:-bin}/" ./cmd/...'
 
-[tasks.'action:update']
-description = "Update GitHub Action versions and pin to commit hashest"
+[tasks."build:check"]
+description = "Check whether the CLI builds"
+run = "go test -run '^$' ./cmd/..."
+
+[tasks.'actions:update']
+description = "Update GitHub Action versions and pin to commit hashes"
 run = "pinact run --update"
 
-[tasks.'action:check-offline']
+[tasks.'actions:check:offline']
 description = "Check GitHub Action versions and pin to commit hashes"
 run = "unset PINACT_MIN_AGE && pinact run --fix=false --no-api"
 

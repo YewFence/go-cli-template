@@ -79,7 +79,7 @@ func run() error {
 		}
 	}
 
-	if _, err := fmt.Fprintln(os.Stdout, "Third-party library versions may be outdated. Run mise run update to update Go dependencies and tidy modules."); err != nil {
+	if _, err := fmt.Fprintln(os.Stdout, "Third-party library versions may be outdated. Run mise run deps:update to update Go dependencies and tidy modules."); err != nil {
 		return err
 	}
 	_, err := fmt.Fprintln(os.Stdout, "If you no longer need the template initialization tool, delete `tools/init-template` and remove the `[tasks.init]` configuration from `mise.toml`.")

@@ -16,7 +16,7 @@ This template commits [mise.lock](mise.lock) to pin the resolved tools declared 
 | --- | --- |
 | CLI framework | Cobra is wired in with a root command, a `version` subcommand, shell completion commands, and a `cmd/your-cli` executable entrypoint |
 | Toolchain | Go, Node, pnpm, actions-up, golangci-lint, and related tools are managed through `mise` |
-| Development tasks | Built-in mise tasks include `tidy`, `update`, `test`, `fmt`, `vet`, `lint`, `check`, `build`, `cli`, and `cli:install` |
+| Development tasks | Built-in mise tasks include `mod:tidy`, `deps:update`, `test`, `fmt:check`, `fmt:fix`, `lint`, `fix`, `check`, `build`, `build:check`, `cli`, and `cli:install` |
 | Agent instructions | `AGENTS.template.md` becomes `AGENTS.md` after initialization. It tells future development agents to run `mise run check` after Go code changes and notes that the generated project is still early enough to avoid backward-compatibility constraints |
 | Documentation site | The `docs` directory includes a VitePress documentation site and a GitHub Pages workflow |
 | CI checks | GitHub Actions update actions, run Go tests, build the project, audit dependencies, and build the documentation |

@@ -1,7 +1,7 @@
 [tools]
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
 
-[tasks.govulncheck]
+[tasks."vuln:check"]
 description = "Run Go vulnerability checks"
 run = "govulncheck ./..."
 
@@ -9,25 +9,12 @@ run = "govulncheck ./..."
 description = "Verify Go module dependencies"
 run = "go mod verify"
 
-[tasks.'tidy:check']
-description = "Check whether Go module dependencies are tidy"
-run = "go mod tidy && git diff --exit-code go.mod go.sum"
-
-[tasks.'lint:newline:check']
-description = "Check Newline Lint issues"
-run = "git ls-files | xargs nllint --trim-space"
-
-[tasks.'fmt:check']
-description = "Check Go code formatting"
-depends = [ "fmt" ]
-run = "git diff --exit-code"
-
-[tasks.'action:check']
+[tasks.'actions:check']
 # Need github token to avoid rate limit
 description = "Check for action pinned version"
 run = "pinact run --check"
 
-[tasks.'action:outdated']
+[tasks.'actions:outdated']
 # Need github token to avoid rate limit
 description = "Check for outdated action versions"
-run = "pinact run --update && git diff --exit-code .github/workflows"
+run = "pinact run --update --diff"
