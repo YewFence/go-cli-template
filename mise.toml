@@ -30,6 +30,7 @@ PINACT_GITHUB_TOKEN = { value = "${MISE_GITHUB_TOKEN:-}", redact = true }
 [tasks.init]
 description = "Initialize project name, module path, and repository information from the template"
 run = "GO111MODULE=off go run ./tools/init-template/main.go --fresh-git"
+interactive = true
 
 [tasks."mod:tidy"]
 description = "Tidy Go module dependencies"
