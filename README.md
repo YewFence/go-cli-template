@@ -54,6 +54,11 @@ The generated project keeps `renovate.json`. To enable dependency update pull re
 
 The generated project is intentionally shaped as a single-command CLI. The executable entrypoint lives under `cmd/<command-name>`, and the mise build, run, install, and release tasks use `./cmd/...` so Go derives the binary name from that entrypoint directory. If you add more executable entrypoints under `cmd/`, adjust those tasks and the release packaging logic at the same time.
 
+After pushing the generated project to GitHub, update these repository settings:
+
+1. Go to `Settings` > `Actions` > `General` > `Workflow permissions`, then enable `Allow GitHub Actions to create and approve pull requests` under `Choose whether GitHub Actions can create pull requests or submit approving pull request reviews`. The release preparation workflow already requests `pull-requests: write`, but this repository setting must also allow `GITHUB_TOKEN` to create the release pull request.
+2. Go to `Settings` > `Pages` > `Build and deployment`, then set `Source` to `GitHub Actions`. The documentation workflow already requests `pages: write` and `id-token: write`, but Pages must use GitHub Actions as its deployment source for `actions/deploy-pages` to publish the built documentation site.
+
 You can also pass all values at once, which is useful for scripted project creation.
 
 ```bash
