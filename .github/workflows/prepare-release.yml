@@ -79,7 +79,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
-          if git diff --quiet -- CHANGELOG.md; then
+          if [[ -z "$(git status --porcelain -- CHANGELOG.md)" ]]; then
             echo "CHANGELOG.md is already up to date"
             echo "changed=false" >> "${GITHUB_OUTPUT}"
             exit 0
