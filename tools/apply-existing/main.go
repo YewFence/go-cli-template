@@ -25,6 +25,10 @@ var newHTTPClient = func() *http.Client {
 	return &http.Client{Timeout: 30 * time.Second}
 }
 
+var obsoleteTemplateFiles = []string{
+	".github/workflows/actions-up.yml",
+}
+
 type config struct {
 	ref string
 }
@@ -98,7 +102,7 @@ func gitOutput(args ...string) (string, error) {
 
 func confirmApply(input *os.File, output *os.File) error {
 	reader := bufio.NewReader(input)
-	message := "This will overwrite mise.toml, renovate.json, .gitignore, and .github/workflows, and download the template documentation site when docs does not exist. Type yes to continue: "
+	message := "This will overwrite mise.toml, mise.ci.toml, mise lock files, renovate.json, .gitignore, hk.pkl, cliff.toml, and .github/workflows, and download the template documentation site when docs does not exist. Type yes to continue: "
 	if _, err := fmt.Fprint(output, message); err != nil {
 		return err
 	}
@@ -116,11 +120,16 @@ func confirmApply(input *os.File, output *os.File) error {
 func planTemplateFiles() ([]templateFile, error) {
 	files := []templateFile{
 		{path: "mise.toml", overwrite: true},
+		{path: "mise.ci.toml", overwrite: true},
+		{path: "mise.lock", overwrite: true},
+		{path: "mise.ci.lock", overwrite: true},
 		{path: "renovate.json", overwrite: true},
 		{path: ".gitignore", overwrite: true},
-		{path: ".github/workflows/actions-up.yml", overwrite: true},
+		{path: "hk.pkl", overwrite: true},
+		{path: "cliff.toml", overwrite: true},
 		{path: ".github/workflows/ci.yml", overwrite: true},
 		{path: ".github/workflows/docs.yml", overwrite: true},
+		{path: ".github/workflows/prepare-release.yml", overwrite: true},
 		{path: ".github/workflows/release.yml", overwrite: true},
 	}
 
@@ -162,7 +171,10 @@ func applyTemplateFiles(config config, files []templateFile) error {
 		}
 		fmt.Fprintf(os.Stdout, "Wrote %s\n", file.path)
 	}
-	return nil
+	if err := removeObsoleteTemplateFiles(); err != nil {
+		return err
+	}
+	return removeMiseInitTask()
 }
 
 func downloadTemplateFile(client *http.Client, ref string, path string) ([]byte, error) {
@@ -197,4 +209,63 @@ func writeFile(path string, content []byte, mode os.FileMode) error {
 		return err
 	}
 	return os.WriteFile(path, content, mode)
+}
+
+func removeObsoleteTemplateFiles() error {
+	for _, path := range obsoleteTemplateFiles {
+		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	return nil
+}
+
+func removeMiseInitTask() error {
+	return removeTOMLTable("mise.toml", "tasks.init")
+}
+
+func removeTOMLTable(path string, table string) error {
+	content, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	lines := strings.SplitAfter(string(content), "\n")
+	targetHeader := "[" + table + "]"
+	updated := make([]string, 0, len(lines))
+	removing := false
+	removed := false
+
+	for _, line := range lines {
+		trimmedLine := strings.TrimSpace(line)
+		if !removing && trimmedLine == targetHeader {
+			removing = true
+			removed = true
+			continue
+		}
+		if removing {
+			if isTOMLTableHeader(trimmedLine) {
+				removing = false
+			} else {
+				continue
+			}
+		}
+		updated = append(updated, line)
+	}
+	if !removed {
+		return nil
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, []byte(strings.Join(updated, "")), info.Mode())
+}
+
+func isTOMLTableHeader(line string) bool {
+	return strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]")
 }
