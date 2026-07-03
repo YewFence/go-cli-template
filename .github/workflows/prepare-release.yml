@@ -122,11 +122,14 @@ jobs:
         if: ${{ steps.branch.outputs.changed == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BASE_SHA: ${{ github.sha }}
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
           RELEASE_NOTES_FILE: ${{ steps.release.outputs.notes_file }}
         run: |
           body_file="${RUNNER_TEMP}/release-pr-body.md"
           {
+            echo "<!-- release-base-sha: ${RELEASE_BASE_SHA} -->"
+            echo
             echo "Prepare ${RELEASE_TAG}."
             echo
             cat "${RELEASE_NOTES_FILE}"
