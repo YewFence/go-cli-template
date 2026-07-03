@@ -112,15 +112,21 @@ curl -fsSL https://raw.githubusercontent.com/YewFence/go-cli-template/main/tools
 go run "$tmp/apply-existing.go"
 ```
 
-## Release Workflow
+## Release Workflow Structure
 
 This template uses `git-cliff` as the release version and changelog engine, and keeps the platform-specific automation directly in GitHub Actions workflow files.
 
 When commits land on `main`, [.github/workflows/prepare-release.yml](.github/workflows/prepare-release.yml) calculates the next semantic version with `git cliff --bumped-version`, updates `CHANGELOG.md` with unreleased changes for that tag, pushes a fixed `release` branch, and creates or updates a pull request back to `main`. The fixed branch name keeps the release path easy to recognize, and the generated pull request makes the changelog reviewable before anything is published.
 
-[.github/workflows/release.yml](.github/workflows/release.yml) is the only workflow that publishes releases. It runs when a local `v*` tag is pushed, so manual tag-driven releases stay supported, and it also runs when the `release` pull request is merged into `main`. In the merged release pull request path, the workflow recalculates the same `git-cliff` version, creates the tag in that same run, builds release artifacts, generates release notes with `git-cliff`, and publishes the GitHub Release. Creating the tag and publishing in one workflow avoids relying on a `GITHUB_TOKEN` tag push to trigger another workflow.
+[.github/workflows/release.yml](.github/workflows/release.yml) is the only workflow that publishes releases. It runs when a local `v*` tag is pushed, so manual tag-driven releases stay supported, and it also runs when the `release` pull request is merged into `main`. In the merged release pull request path, the workflow recalculates the same `git-cliff` version, creates the tag in that same run, builds release artifacts, generates release notes with `git-cliff`, and publishes the GitHub Release. Creating the tag and publishing the release in the same workflow keeps the merged release PR path reliable, because tags pushed by the workflow's `GITHUB_TOKEN` do not start another tag-triggered workflow run.
 
-The release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as `release-please`. The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later, where only the pull request and release publishing commands should need to change.
+The release pull request body includes a hidden `release-base-sha` marker that records the `main` commit used to generate the changelog. When the release pull request is merged, the release workflow compares that marker with the merged release commit's first parent, which rejects stale release pull requests that were generated before newer `main` commits landed. The workflow also checks that the first semantic version found in `CHANGELOG.md` matches the resolved release tag.
+
+Release runs are serialized by event and ref, and manually dispatched releases require tags in `vMAJOR.MINOR.PATCH` form with an optional pre-release suffix. Tag-driven and release pull request releases with a pre-release suffix are published as GitHub pre-releases, while manually dispatched releases use the explicit `prerelease` input.
+
+After a manual release is published, a separate low-privilege cleanup job looks for an open `release` to `main` pull request that still matches the published tag, comments on it, renames it with an `[autoclosed]` suffix, and closes it.
+
+The release automatThe release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as [release-please](https://github.com/googleapis/release-please).The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later.
 
 The reusable release helpers live in `mise.ci.toml`. Run them with `MISE_ENV=ci`, for example `MISE_ENV=ci mise run release:version` to print the next version, `MISE_ENV=ci mise run release:tag` to print the next tag, `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:notes` to preview release notes, and `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:changelog` to update `CHANGELOG.md`.
 
