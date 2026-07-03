@@ -93,6 +93,7 @@ run = [
   { task = "lint" },
   { task = "test" }
 ]
+alias = "c"
 
 [tasks.fix]
 description = "Fix Go modules, newlines, typos, and formatting"
@@ -102,6 +103,7 @@ run = [
   { task = "typos:fix" },
   { task = "fmt:fix" }
 ]
+alias = "f"
 
 [tasks.cli]
 description = "Run the CLI"
