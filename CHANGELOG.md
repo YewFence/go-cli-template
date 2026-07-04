@@ -1,3 +1,15 @@
+## What's Changed in 0.1.1
+* change commit message for squash merge more easy without modify by @YewFence
+* extract packaging logic into mise task by @YewFence
+* Feat/ci cd enhance by @YewFence in [#9](https://github.com/YewFence/go-cli-template/pull/9)
+* use || to make any mismatch causes a skip to auto close release PR by @YewFence
+* fix duplicated README paragraph by @YewFence
+* expand release workflow documentation in README by @YewFence
+* enhance release workflow with validation and auto-close superseded PRs by @YewFence
+* add step summaries and logging to release workflows by @YewFence
+
+**Full Changelog**: https://github.com/YewFence/go-cli-template/compare/v0.1.0...v0.1.1
+
 ## What's Changed in 0.1.0
 * document required GitHub repository settings after project generation by @YewFence
 * fix changelog change detection by @YewFence
