@@ -122,7 +122,7 @@ When commits land on `main`, [.github/workflows/prepare-release.yml](.github/wor
 
 The release pull request body includes a hidden `release-base-sha` marker that records the `main` commit used to generate the changelog. When the release pull request is merged, the release workflow compares that marker with the merged release commit's first parent, which rejects stale release pull requests that were generated before newer `main` commits landed. The workflow also checks that the first semantic version found in `CHANGELOG.md` matches the resolved release tag.
 
-Release runs are serialized by event and ref, and manually dispatched releases require tags in `vMAJOR.MINOR.PATCH` form with an optional pre-release suffix. Tag-driven and release pull request releases with a pre-release suffix are published as GitHub pre-releases, while manually dispatched releases use the explicit `prerelease` input.
+Release runs are serialized by event and ref, and manually dispatched releases require tags in `vMAJOR.MINOR.PATCH` form with an optional prerelease suffix. Tag-driven and release pull request releases with a prerelease suffix are published as GitHub prereleases, while manually dispatched releases use the explicit `prerelease` input.
 
 After a manual release is published, a separate low-privilege cleanup job looks for an open `release` to `main` pull request that still matches the published tag, comments on it, renames it with an `[autoclosed]` suffix, and closes it.
 
