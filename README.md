@@ -126,7 +126,7 @@ Release runs are serialized by event and ref, and manually dispatched releases r
 
 After a manual release is published, a separate low-privilege cleanup job looks for an open `release` to `main` pull request that still matches the published tag, comments on it, renames it with an `[autoclosed]` suffix, and closes it.
 
-The release automatThe release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as [release-please](https://github.com/googleapis/release-please).The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later.
+The release automation is intentionally hand-rolled instead of delegated to a GitHub-only release manager such as [release-please](https://github.com/googleapis/release-please). The moving pieces are small and explicit: `git-cliff` owns version and changelog generation, `gh` owns pull request operations, and the release workflow owns tagging, building, and publishing. Keeping those responsibilities visible makes it easier to port the same release model to another forge such as Forgejo later.
 
 The reusable release helpers live in `mise.ci.toml`. Run them with `MISE_ENV=ci`, for example `MISE_ENV=ci mise run release:version` to print the next version, `MISE_ENV=ci mise run release:tag` to print the next tag, `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:notes` to preview release notes, and `MISE_ENV=ci RELEASE_TAG=v1.2.3 mise run release:changelog` to update `CHANGELOG.md`.
 
