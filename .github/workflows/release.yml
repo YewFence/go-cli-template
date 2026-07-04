@@ -435,7 +435,7 @@ jobs:
           pr_number="$(jq -r '.number' <<< "${pr_json}")"
           pr_title="$(jq -r '.title // ""' <<< "${pr_json}")"
           pr_body="$(jq -r '.body // ""' <<< "${pr_json}")"
-          if [[ "${pr_title}" != "chore: release ${RELEASE_TAG}" && "${pr_body}" != *"Prepare ${RELEASE_TAG}."* ]]; then
+          if [[ "${pr_title}" != "chore: release ${RELEASE_TAG}" || "${pr_body}" != *"Prepare ${RELEASE_TAG}."* ]]; then
             echo "Open release PR #${pr_number} does not match ${RELEASE_TAG}. Skipping close."
             echo "| Superseded Release PR | \`skipped #${pr_number}\` |" >> "${GITHUB_STEP_SUMMARY}"
             exit 0
