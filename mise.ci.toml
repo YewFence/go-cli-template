@@ -1,5 +1,6 @@
 [tools]
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
+ko = "latest"
 
 [tasks."vuln:check"]
 description = "Run Go vulnerability checks"
@@ -104,3 +105,82 @@ fi
 [tasks.'release:package']
 description = "Package the built CLI artifact for a release"
 file = "scripts/release-package.sh"
+
+[tasks.'release:container:build']
+description = "Build the CLI container image without publishing"
+shell = "bash -c"
+run = """
+set -euo pipefail
+
+version="${BUILD_VERSION:-dev}"
+tag="${RELEASE_TAG:-v${version}}"
+repo="${KO_DOCKER_REPO:-}"
+if [[ -z "${repo}" ]]; then
+  if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
+    repo="ghcr.io/${GITHUB_REPOSITORY,,}"
+  else
+    repo="ghcr.io/example/your-cli"
+  fi
+fi
+repo="${repo,,}"
+
+KO_DOCKER_REPO="${repo}" ko build ./cmd/your-cli \
+  --push=false \
+  --bare \
+  --tags "${tag}" \
+  --platform "${KO_PLATFORMS:-linux/amd64}" \
+  --ldflags "-s -w -X main.version=${version}"
+"""
+
+[tasks.'release:container:publish']
+description = "Publish the CLI container image"
+shell = "bash -c"
+run = """
+set -euo pipefail
+
+tag="${RELEASE_TAG:?RELEASE_TAG must be set}"
+version="${tag#v}"
+repo="${KO_DOCKER_REPO:-}"
+if [[ -z "${repo}" ]]; then
+  if [[ -z "${GITHUB_REPOSITORY:-}" ]]; then
+    echo "KO_DOCKER_REPO or GITHUB_REPOSITORY must be set"
+    exit 1
+  fi
+  repo="ghcr.io/${GITHUB_REPOSITORY,,}"
+fi
+repo="${repo,,}"
+
+registry="${KO_REGISTRY:-${repo%%/*}}"
+registry="${registry,,}"
+username="${KO_REGISTRY_USERNAME:-}"
+password="${KO_REGISTRY_PASSWORD:-}"
+if [[ -z "${username}" && -n "${password}" && "${registry}" == "ghcr.io" ]]; then
+  username="${GITHUB_ACTOR:-}"
+fi
+if [[ -z "${username}" && -z "${password}" && "${registry}" == "ghcr.io" && -n "${GITHUB_TOKEN:-}" && -n "${GITHUB_ACTOR:-}" ]]; then
+  username="${GITHUB_ACTOR}"
+  password="${GITHUB_TOKEN}"
+fi
+
+if [[ -n "${username}" || -n "${password}" ]]; then
+  if [[ -z "${username}" || -z "${password}" ]]; then
+    echo "KO_REGISTRY_USERNAME and KO_REGISTRY_PASSWORD must be set together"
+    exit 1
+  fi
+  printf '%s' "${password}" | ko login "${registry}" --username "${username}" --password-stdin
+fi
+
+args=(
+  ./cmd/your-cli
+  --bare
+  --tags "${tag}"
+  --tags "${version}"
+  --platform "${KO_PLATFORMS:-linux/amd64,linux/arm64}"
+  --ldflags "-s -w -X main.version=${version}"
+)
+if [[ -n "${KO_IMAGE_REFS_OUTPUT:-}" ]]; then
+  args+=(--image-refs "${KO_IMAGE_REFS_OUTPUT}")
+fi
+
+KO_DOCKER_REPO="${repo}" ko build "${args[@]}"
+"""

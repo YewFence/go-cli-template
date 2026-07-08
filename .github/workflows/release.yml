@@ -277,11 +277,76 @@ jobs:
             dist/*.zip
           if-no-files-found: error
 
+  container:
+    name: Publish Container Image
+    runs-on: ubuntu-latest
+    needs: version
+    if: ${{ needs.version.outputs.should_release == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    env:
+      MISE_TASK_RUN_AUTO_INSTALL: "false"
+      MISE_LOCKED: "1"
+      MISE_ENV: "ci"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ needs.version.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          install_args: go ko
+          add_shims_to_path: true
+          cache_key: "mise-release-container-{{install_args_hash}}-{{file_hash}}"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: go-container-${{ runner.os }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            go-container-${{ runner.os }}-
+
+      - name: Publish container image
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
+          KO_DOCKER_REPO: ${{ secrets.KO_DOCKER_REPO }}
+          KO_REGISTRY: ${{ secrets.KO_REGISTRY }}
+          KO_REGISTRY_USERNAME: ${{ secrets.KO_REGISTRY_USERNAME }}
+          KO_REGISTRY_PASSWORD: ${{ secrets.KO_REGISTRY_PASSWORD }}
+        run: |
+          image_refs_file="${RUNNER_TEMP}/image-refs.txt"
+          KO_IMAGE_REFS_OUTPUT="${image_refs_file}" mise run release:container:publish
+          display_repo="${KO_DOCKER_REPO:-ghcr.io/${GITHUB_REPOSITORY}}"
+          display_repo="${display_repo,,}"
+
+          echo "Published container image"
+          {
+            echo "## Publish Container Image"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Repository | \`${display_repo}\` |"
+            echo "| Platforms | \`${KO_PLATFORMS:-linux/amd64,linux/arm64}\` |"
+            echo "| Tags | \`${RELEASE_TAG}\`, \`${RELEASE_TAG#v}\` |"
+            echo
+            echo "Published refs:"
+            echo
+            sed 's/^/- `/' "${image_refs_file}" | sed 's/$/`/'
+          } >> "${GITHUB_STEP_SUMMARY}"
+
   release:
     name: Publish GitHub Release
     needs:
       - version
       - build
+      - container
     if: ${{ needs.version.outputs.should_release == 'true' }}
     runs-on: ubuntu-latest
     env:
