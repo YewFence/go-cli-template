@@ -1,3 +1,13 @@
+## What's Changed in 0.2.0
+* chore(mise-deps): update mise tools by @renovate[bot] in [#7](https://github.com/YewFence/go-cli-template/pull/7)
+* chore(go-deps): update go module directive to v1.26.5 by @renovate[bot] in [#13](https://github.com/YewFence/go-cli-template/pull/13)
+* improve newline lint tasks with text file filtering and exclusions by @YewFence
+* enhance container release process and template replacement logic by @YewFence
+* add container image build and publish workflows by @YewFence
+* extract release-package script to separate file by @YewFence
+
+**Full Changelog**: https://github.com/YewFence/go-cli-template/compare/v0.1.1...v0.2.0
+
 ## What's Changed in 0.1.1
 * change commit message for squash merge more easy without modify by @YewFence
 * extract packaging logic into mise task by @YewFence
