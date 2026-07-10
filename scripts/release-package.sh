@@ -2,15 +2,20 @@
 
 set -euo pipefail
 
-artifact_dir="${RELEASE_ARTIFACT_DIR:-${BUILD_OUTPUT_DIR:-dist}}"
+artifact_dir="${RELEASE_ARTIFACT_DIR:-${BUILD_OUTPUT_DIR:-bin}}"
 tag="${RELEASE_TAG:-$(mise run release:tag)}"
 
 GOOS="${GOOS:-$(go env GOOS)}"
 GOARCH="${GOARCH:-$(go env GOARCH)}"
 
-mapfile -t binaries < <(find "${artifact_dir}" -maxdepth 1 -type f ! -name '*.tar.gz' ! -name '*.zip' -print | sort)
+binaries=()
+binary_count=0
+while IFS= read -r binary_path; do
+  binaries[binary_count]="${binary_path}"
+  binary_count=$((binary_count + 1))
+done < <(find "${artifact_dir}" -maxdepth 1 -type f ! -name '*.tar.gz' ! -name '*.zip' -print | sort)
 
-case "${#binaries[@]}" in
+case "${binary_count}" in
   0)
     echo "No build artifact was found in ${artifact_dir}"
     exit 1
@@ -19,7 +24,7 @@ case "${#binaries[@]}" in
     binary_path="${binaries[0]}"
     ;;
   *)
-    echo "Expected exactly one build artifact in ${artifact_dir}, found ${#binaries[@]}"
+    echo "Expected exactly one build artifact in ${artifact_dir}, found ${binary_count}"
     printf '  %s\n' "${binaries[@]}"
     exit 1
     ;;

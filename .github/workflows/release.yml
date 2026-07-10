@@ -313,6 +313,7 @@ jobs:
             go-container-${{ runner.os }}-
 
       - name: Publish container image
+        id: container
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ needs.version.outputs.tag }}
@@ -322,23 +323,31 @@ jobs:
           KO_REGISTRY_PASSWORD: ${{ secrets.KO_REGISTRY_PASSWORD }}
         run: |
           image_refs_file="${RUNNER_TEMP}/image-refs.txt"
-          KO_IMAGE_REFS_OUTPUT="${image_refs_file}" mise run release:container:publish
-          display_repo="${KO_DOCKER_REPO:-ghcr.io/${GITHUB_REPOSITORY}}"
-          display_repo="${display_repo,,}"
+          KO_IMAGE_REFS_OUTPUT="${image_refs_file}" \
+            KO_METADATA_OUTPUT="${GITHUB_OUTPUT}" \
+            mise run release:container:publish
+          echo "image_refs_file=${image_refs_file}" >> "${GITHUB_OUTPUT}"
 
+      - name: Summarize published container image
+        env:
+          IMAGE_REFS_FILE: ${{ steps.container.outputs.image_refs_file }}
+          PUBLISHED_PLATFORMS: ${{ steps.container.outputs.platforms }}
+          PUBLISHED_REPOSITORY: ${{ steps.container.outputs.repository }}
+          PUBLISHED_TAGS: ${{ steps.container.outputs.tags }}
+        run: |
           echo "Published container image"
           {
             echo "## Publish Container Image"
             echo
             echo "| Field | Value |"
             echo "| --- | --- |"
-            echo "| Repository | \`${display_repo}\` |"
-            echo "| Platforms | \`${KO_PLATFORMS:-linux/amd64,linux/arm64}\` |"
-            echo "| Tags | \`${RELEASE_TAG}\`, \`${RELEASE_TAG#v}\` |"
+            echo "| Repository | \`${PUBLISHED_REPOSITORY}\` |"
+            echo "| Platforms | \`${PUBLISHED_PLATFORMS}\` |"
+            echo "| Tags | \`${PUBLISHED_TAGS}\` |"
             echo
             echo "Published refs:"
             echo
-            sed 's/^/- `/' "${image_refs_file}" | sed 's/$/`/'
+            sed 's/^/- `/' "${IMAGE_REFS_FILE}" | sed 's/$/`/'
           } >> "${GITHUB_STEP_SUMMARY}"
 
   release:

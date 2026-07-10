@@ -158,21 +158,58 @@ func TestTemplateReplacementsSupportExplicitPlaceholders(t *testing.T) {
 	}
 }
 
-func TestTemplateReplacementsDoNotRewriteNewModulePathCommandName(t *testing.T) {
+func TestTemplateReplacementsSupportLegacyRepositoryPlaceholder(t *testing.T) {
 	config := config{
-		module:      "github.com/acme/your-cli-tools",
-		name:        "tool",
+		module:      "github.com/acme/widget-module",
+		name:        "widget",
 		owner:       "acme",
-		repo:        "your-cli-tools",
-		description: "Manage tools",
+		repo:        "widget-repo",
+		description: "Manage widgets",
+	}
+	replacements := templateReplacements(config)
+
+	directory := t.TempDir()
+	path := filepath.Join(directory, "mise.ci.toml")
+	if err := os.WriteFile(path, []byte(`repo="ghcr.io/example/your-cli-repo"`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := replaceInFile(path, replacements); err != nil {
+		t.Fatalf("replaceInFile() error = %v", err)
+	}
+	output, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := string(output), `repo="ghcr.io/acme/widget-repo"`; got != want {
+		t.Fatalf("output = %q, want %q", got, want)
+	}
+}
+
+func TestTemplateReplacementsDoNotRewriteReplacementValues(t *testing.T) {
+	config := config{
+		module:      "github.com/example-labs/your-cli-module",
+		name:        "example-your-cli",
+		owner:       "example-labs",
+		repo:        "example-your-cli-repo",
+		description: "Manage example your-cli projects",
 	}
 	replacements := templateReplacements(config)
 
 	directory := t.TempDir()
 	path := filepath.Join(directory, "main.go")
 	content := strings.Join([]string{
-		`import "github.com/example/your-cli/internal/cli"`,
-		`const commandName = "your-cli"`,
+		`explicitModule = "{{MODULE_PATH}}"`,
+		`explicitName = "{{PROJECT_NAME}}"`,
+		`explicitOwner = "{{GITHUB_OWNER}}"`,
+		`explicitRepo = "{{REPO_NAME}}"`,
+		`explicitDescription = "{{PROJECT_DESCRIPTION}}"`,
+		`legacyModule = "github.com/example/your-cli"`,
+		`legacyName = "your-cli"`,
+		`legacyOwner = "example"`,
+		`legacyRepo = "your-cli-repo"`,
+		`legacyDescription = "Your CLI description"`,
 	}, "\n")
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
@@ -187,11 +224,22 @@ func TestTemplateReplacementsDoNotRewriteNewModulePathCommandName(t *testing.T) 
 	}
 
 	got := string(output)
-	if !strings.Contains(got, `github.com/acme/your-cli-tools/internal/cli`) {
-		t.Fatalf("module path was rewritten incorrectly:\n%s", got)
+	wants := []string{
+		`explicitModule = "github.com/example-labs/your-cli-module"`,
+		`explicitName = "example-your-cli"`,
+		`explicitOwner = "example-labs"`,
+		`explicitRepo = "example-your-cli-repo"`,
+		`explicitDescription = "Manage example your-cli projects"`,
+		`legacyModule = "github.com/example-labs/your-cli-module"`,
+		`legacyName = "example-your-cli"`,
+		`legacyOwner = "example-labs"`,
+		`legacyRepo = "example-your-cli-repo"`,
+		`legacyDescription = "Manage example your-cli projects"`,
 	}
-	if !strings.Contains(got, `const commandName = "tool"`) {
-		t.Fatalf("command name was not rewritten:\n%s", got)
+	for _, want := range wants {
+		if !strings.Contains(got, want) {
+			t.Fatalf("output missing %q:\n%s", want, got)
+		}
 	}
 }
 

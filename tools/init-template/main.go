@@ -419,6 +419,7 @@ func templateReplacements(config config) []replacement {
 		{old: "{{REPO_NAME}}", new: config.repo},
 		{old: "{{PROJECT_DESCRIPTION}}", new: config.description},
 		{old: "github.com/example/your-cli", new: config.module},
+		{old: "your-cli-repo", new: config.repo},
 		{old: "example", new: config.owner},
 		{old: "your-cli", new: config.name},
 		{old: "Your CLI description", new: config.description},
@@ -431,12 +432,11 @@ func replaceInFile(path string, replacements []replacement) error {
 		return err
 	}
 
-	const modulePlaceholder = "\x00MODULE_PATH\x00"
-	updated := strings.ReplaceAll(string(content), "github.com/example/your-cli", modulePlaceholder)
+	pairs := make([]string, 0, len(replacements)*2)
 	for _, replacement := range replacements {
-		updated = strings.ReplaceAll(updated, replacement.old, replacement.new)
+		pairs = append(pairs, replacement.old, replacement.new)
 	}
-	updated = strings.ReplaceAll(updated, modulePlaceholder, replacementValue(replacements, "github.com/example/your-cli"))
+	updated := strings.NewReplacer(pairs...).Replace(string(content))
 	if updated == string(content) {
 		return nil
 	}
@@ -446,15 +446,6 @@ func replaceInFile(path string, replacements []replacement) error {
 		return err
 	}
 	return os.WriteFile(path, []byte(updated), info.Mode())
-}
-
-func replacementValue(replacements []replacement, old string) string {
-	for _, replacement := range replacements {
-		if replacement.old == old {
-			return replacement.new
-		}
-	}
-	return old
 }
 
 func removeTemplateOrigin() error {
