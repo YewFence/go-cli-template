@@ -158,35 +158,6 @@ func TestTemplateReplacementsSupportExplicitPlaceholders(t *testing.T) {
 	}
 }
 
-func TestTemplateReplacementsSupportLegacyRepositoryPlaceholder(t *testing.T) {
-	config := config{
-		module:      "github.com/acme/widget-module",
-		name:        "widget",
-		owner:       "acme",
-		repo:        "widget-repo",
-		description: "Manage widgets",
-	}
-	replacements := templateReplacements(config)
-
-	directory := t.TempDir()
-	path := filepath.Join(directory, "mise.ci.toml")
-	if err := os.WriteFile(path, []byte(`repo="ghcr.io/example/your-cli-repo"`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := replaceInFile(path, replacements); err != nil {
-		t.Fatalf("replaceInFile() error = %v", err)
-	}
-	output, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if got, want := string(output), `repo="ghcr.io/acme/widget-repo"`; got != want {
-		t.Fatalf("output = %q, want %q", got, want)
-	}
-}
-
 func TestTemplateReplacementsDoNotRewriteReplacementValues(t *testing.T) {
 	config := config{
 		module:      "github.com/example-labs/your-cli-module",
@@ -208,7 +179,6 @@ func TestTemplateReplacementsDoNotRewriteReplacementValues(t *testing.T) {
 		`legacyModule = "github.com/example/your-cli"`,
 		`legacyName = "your-cli"`,
 		`legacyOwner = "example"`,
-		`legacyRepo = "your-cli-repo"`,
 		`legacyDescription = "Your CLI description"`,
 	}, "\n")
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
@@ -233,7 +203,6 @@ func TestTemplateReplacementsDoNotRewriteReplacementValues(t *testing.T) {
 		`legacyModule = "github.com/example-labs/your-cli-module"`,
 		`legacyName = "example-your-cli"`,
 		`legacyOwner = "example-labs"`,
-		`legacyRepo = "example-your-cli-repo"`,
 		`legacyDescription = "Manage example your-cli projects"`,
 	}
 	for _, want := range wants {

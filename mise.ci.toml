@@ -1,6 +1,5 @@
 [tools]
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
-ko = "latest"
 
 [tasks."vuln:check"]
 description = "Run Go vulnerability checks"
@@ -105,11 +104,3 @@ fi
 [tasks.'release:package']
 description = "Package the built CLI artifact for a release"
 file = "scripts/release-package.sh"
-
-[tasks.'release:container:build']
-description = "Build the CLI container image without publishing"
-run = "scripts/release-container.sh build"
-
-[tasks.'release:container:publish']
-description = "Publish the CLI container image"
-run = "scripts/release-container.sh publish"

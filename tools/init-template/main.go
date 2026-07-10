@@ -419,7 +419,6 @@ func templateReplacements(config config) []replacement {
 		{old: "{{REPO_NAME}}", new: config.repo},
 		{old: "{{PROJECT_DESCRIPTION}}", new: config.description},
 		{old: "github.com/example/your-cli", new: config.module},
-		{old: "your-cli-repo", new: config.repo},
 		{old: "example", new: config.owner},
 		{old: "your-cli", new: config.name},
 		{old: "Your CLI description", new: config.description},
