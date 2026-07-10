@@ -22,6 +22,11 @@ betterleaks = "1"
 actionlint = "1"
 git-cliff = "latest"
 
+[vars]
+nllint_excludes = ""
+# example: exclude file
+# nllint_excludes = "':(top,exclude)file'"
+
 [env]
 # the minimum release age of github actions in days
 PINACT_MIN_AGE = "3"
@@ -75,13 +80,13 @@ run = "typos"
 description = "Fix Typos Lint"
 run = "typos --write-changes"
 
-[tasks."newline:fix"]
-description = "Fix Newline Lint issues"
-run = "git ls-files | xargs nllint --fix --trim-space"
-
 [tasks."newline:check"]
-description = "Check Newline Lint issues"
-run = "git ls-files | xargs nllint --trim-space"
+description = "Check final newlines and surrounding whitespace in tracked text files"
+run = "git grep -Ilz '' -- . {{ vars.nllint_excludes }} | xargs -0 nllint --trim-space"
+
+[tasks."newline:fix"]
+description = "Fix final newlines and surrounding whitespace in tracked text files"
+run = "git grep -Ilz '' -- . {{ vars.nllint_excludes }} | xargs -0 nllint --fix --trim-space"
 
 [tasks.check]
 description = """
