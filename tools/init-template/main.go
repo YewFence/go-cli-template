@@ -72,6 +72,9 @@ func run() error {
 	if err := replaceWithTemplate("AGENTS.md", "AGENTS.template.md"); err != nil {
 		return err
 	}
+	if err := os.Remove("CHANGELOG.md"); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
 	if err := removeMiseInitTask(); err != nil {
 		return err
 	}

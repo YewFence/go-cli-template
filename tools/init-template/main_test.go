@@ -298,6 +298,9 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	if err := os.WriteFile("renovate.json", []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile("CHANGELOG.md", []byte("# Changelog\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	miseTOML := strings.Join([]string{
 		"[tasks.init]",
 		"description = \"Initialize project\"",
@@ -343,6 +346,9 @@ func TestRunReplacesReadmeWithReadmeTemplate(t *testing.T) {
 	}
 	if _, err := os.Stat("renovate.json"); err != nil {
 		t.Fatalf("renovate.json stat error = %v", err)
+	}
+	if _, err := os.Stat("CHANGELOG.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("CHANGELOG.md stat error = %v, want not exist", err)
 	}
 	miseOutput, err := os.ReadFile("mise.toml")
 	if err != nil {
