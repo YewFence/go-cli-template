@@ -1,3 +1,9 @@
+## What's Changed in 0.3.0
+* remove unnecessary config options by @YewFence
+* remove CHANGELOG.md during initialization by @YewFence
+
+**Full Changelog**: https://github.com/YewFence/go-cli-template/compare/v0.2.1...v0.3.0
+
 ## What's Changed in 0.2.0
 * chore(mise-deps): update mise tools by @renovate[bot] in [#7](https://github.com/YewFence/go-cli-template/pull/7)
 * chore(go-deps): update go module directive to v1.26.5 by @renovate[bot] in [#13](https://github.com/YewFence/go-cli-template/pull/13)
