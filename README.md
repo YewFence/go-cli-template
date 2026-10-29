@@ -1,5 +1,9 @@
 # Go CLI Template
 
+> [!NOTE]
+> Archived Note:
+> Migrate to https://github.com/YewFence/template
+
 This is a ready-to-use Go CLI project template. It uses [Cobra](https://github.com/spf13/cobra) for command organization, [mise](https://github.com/jdx/mise) for toolchain and task management, and includes a [VitePress documentation site](./docs), GitHub Actions [continuous integration](.github/workflows/ci.yml), [documentation publishing](.github/workflows/docs.yml), [Renovate dependency updates](./renovate.json), simple linting, and an [automated release workflow](#release-workflow).
 
 ## Requirements
